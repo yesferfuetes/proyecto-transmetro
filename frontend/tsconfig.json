@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "ES2023"
-    ],
+    "lib": ["dom", "dom.iterable", "ES2023"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -23,13 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     },
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true
   },
@@ -41,7 +33,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

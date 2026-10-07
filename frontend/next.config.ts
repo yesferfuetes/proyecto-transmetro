@@ -37,7 +37,7 @@ const configuracion: NextConfig = {
       },
     },
   },
-  headers: async () => [{ source: '/:path*', headers: cabecerasDeSeguridad }],
+  headers: () => Promise.resolve([{ source: '/:path*', headers: cabecerasDeSeguridad }]),
 };
 
 export default configuracion;
