@@ -16,7 +16,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "test:cov": "vitest run --coverage"
+    "test:cov": "vitest run --coverage",
+    "e2e": "playwright test",
+    "tamano-paquete": "node scripts/tamano-paquete.mjs"
   },
   "dependencies": {
     "clsx": "~2.1.1",
@@ -28,6 +30,8 @@
     "zod": "~4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "~4.13.0",
+    "@playwright/test": "~1.63.0",
     "@tailwindcss/turbopack": "~4.3.3",
     "@testing-library/dom": "~10.4.2",
     "@testing-library/jest-dom": "~7.0.1",
