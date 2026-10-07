@@ -28,14 +28,14 @@ describe('LayoutPanel', () => {
   it('solo el administrador ve Usuarios en la navegación', async () => {
     const { unmount } = render(await LayoutPanel({ children: null }));
     const [lateral] = screen.getAllByRole('navigation', { name: 'Principal' });
-    expect(within(lateral!).queryByRole('link', { name: 'Usuarios' })).toBeNull();
+    expect(within(lateral).queryByRole('link', { name: 'Usuarios' })).toBeNull();
     unmount();
 
     vi.stubEnv('ROL_DE_EJEMPLO', 'administrador');
     render(await LayoutPanel({ children: null }));
     const [lateralAdministrador] = screen.getAllByRole('navigation', { name: 'Principal' });
     expect(
-      within(lateralAdministrador!).getByRole('link', { name: 'Usuarios' }),
+      within(lateralAdministrador).getByRole('link', { name: 'Usuarios' }),
     ).toBeInTheDocument();
   });
 });

@@ -30,17 +30,17 @@ describe('NavegacionPrincipal', () => {
     );
 
     const [lateral] = screen.getAllByRole('navigation', { name: 'Principal' });
-    expect(within(lateral!).getAllByRole('link')).toHaveLength(6);
-    expect(within(lateral!).getByText('Ana López')).toBeInTheDocument();
-    expect(within(lateral!).getByText('Supervisor municipal')).toBeInTheDocument();
+    expect(within(lateral).getAllByRole('link')).toHaveLength(6);
+    expect(within(lateral).getByText('Ana López')).toBeInTheDocument();
+    expect(within(lateral).getByText('Supervisor municipal')).toBeInTheDocument();
   });
 
   it('en la barra inferior muestra cuatro destinos y "Más" con el resto', () => {
     render(<NavegacionPrincipal destinos={DESTINOS} usuario={{ nombre: 'Ana', rol: 'Rol' }} />);
 
     const [, inferior] = screen.getAllByRole('navigation', { name: 'Principal' });
-    expect(within(inferior!).getAllByRole('link')).toHaveLength(4);
-    expect(within(inferior!).getByRole('button', { name: 'Más' })).toBeInTheDocument();
+    expect(within(inferior).getAllByRole('link')).toHaveLength(4);
+    expect(within(inferior).getByRole('button', { name: 'Más' })).toBeInTheDocument();
   });
 });
 
