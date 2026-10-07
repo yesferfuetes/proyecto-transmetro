@@ -96,7 +96,10 @@ export function TablaDatos<T>({
                   )}
                 >
                   {columnas.map((columna) => (
-                    <td key={columna.clave} className={cn(clasesDeCelda(columna), 'py-2')}>
+                    <td
+                      key={columna.clave}
+                      className={cn(clasesDeCelda(columna), 'py-2 whitespace-nowrap')}
+                    >
                       {columna.celda(fila)}
                     </td>
                   ))}

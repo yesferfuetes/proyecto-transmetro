@@ -19,7 +19,8 @@ export default async function LayoutPanel({ children }: Propiedades): Promise<Re
       />
       <main
         id="contenido"
-        className="min-w-0 flex-1 px-gutter pt-6 pb-32 lg:px-gutter-lg lg:pt-gutter lg:pb-section"
+        tabIndex={-1}
+        className="min-w-0 flex-1 px-gutter pt-6 pb-32 focus:outline-none lg:px-gutter-lg lg:pt-gutter lg:pb-section"
       >
         <div className="mx-auto max-w-content">{children}</div>
       </main>
