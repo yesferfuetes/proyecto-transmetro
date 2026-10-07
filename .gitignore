@@ -6,6 +6,7 @@ dist/
 .next/
 out/
 backend/openapi.json
+*.tsbuildinfo
 
 # Pruebas y cobertura
 coverage/
