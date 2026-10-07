@@ -140,7 +140,7 @@ Railway, un entorno de producción, tres servicios (ADR 0003):
 | `backend`  | `backend/Dockerfile`  | Privada, sin dominio público. Antes de cada despliegue corre `npm run migration:run`; si falla, no se despliega |
 | `frontend` | `frontend/Dockerfile` | Dominio público HTTPS                                                                                           |
 
-Railway despliega la rama `main` solo cuando el pipeline pasa completo. Los datos semilla se cargan
+La configuración de cada servicio se fija con `bash scripts/railway-configurar.sh backend|frontend` (requiere la CLI de Railway con sesión iniciada). Railway despliega la rama `main` solo cuando el pipeline pasa completo. Los datos semilla se cargan
 una vez con `npm run seed` dentro del contenedor del backend.
 
 ## Datos semilla

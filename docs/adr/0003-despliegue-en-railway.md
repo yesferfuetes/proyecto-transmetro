@@ -8,7 +8,7 @@ El estándar de frontend despliega en Cloud Run. El proyecto no dispone de cuent
 
 ## Decisión
 
-PostgreSQL, backend y frontend se despliegan como tres servicios de Railway en un solo entorno de producción, desde la rama `main`. Cada servicio se construye desde su `Dockerfile`; el frontend usa la misma salida standalone que exige el estándar. La configuración vive en `railway.json` de cada carpeta.
+PostgreSQL, backend y frontend se despliegan como tres servicios de Railway en un solo entorno de producción, desde la rama `main`. Cada servicio se construye desde su `Dockerfile`; el frontend usa la misma salida standalone que exige el estándar. La configuración de cada servicio (carpeta raíz, Dockerfile, migraciones antes de desplegar, verificación de salud, reinicio y espera del pipeline) se fija con `scripts/railway-configurar.sh`, que es su fuente de verdad versionada. Railway dejó de aceptar `railway.json` como configuración como código.
 
 ## Consecuencias
 
