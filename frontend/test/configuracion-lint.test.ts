@@ -1,5 +1,7 @@
 import { ESLint } from 'eslint';
-import { describe, expect, it } from 'vitest';
+import { rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 /**
  * Comprueba que la configuración de ESLint rechaza lo que los estándares prohíben.
@@ -94,5 +96,47 @@ describe('configuración de ESLint del frontend', () => {
     expect(await reglasVioladas(componente('bg-red-500'))).toContain(
       'better-tailwindcss/no-unknown-classes',
     );
+  });
+
+  describe('fronteras entre módulos', () => {
+    // Archivo interno real del módulo flota; existe solo mientras corren estas pruebas.
+    const archivoInterno = join(process.cwd(), 'src/modules/flota/schemas/prueba-lint.ts');
+
+    beforeAll(() => {
+      writeFileSync(archivoInterno, 'export const interno = 1;\n');
+    });
+
+    afterAll(() => {
+      rmSync(archivoInterno, { force: true });
+    });
+
+    it('acepta que el propio módulo importe su interior', async () => {
+      const codigo = "export { interno } from './schemas/prueba-lint';\n";
+      expect(await reglasVioladas(codigo, 'src/modules/flota/index.ts')).toEqual([]);
+    });
+
+    it('rechaza que otro módulo importe ese interior', async () => {
+      const codigo = "export { interno } from '../flota/schemas/prueba-lint';\n";
+      expect(await reglasVioladas(codigo, 'src/modules/red/index.ts')).toContain(
+        'boundaries/dependencies',
+      );
+    });
+
+    it('rechaza que una ruta importe ese interior', async () => {
+      const codigo = "export { interno } from '@/modules/flota/schemas/prueba-lint';\n";
+      expect(await reglasVioladas(codigo, 'src/app/layout.tsx')).toContain(
+        'boundaries/dependencies',
+      );
+    });
+
+    it('acepta la superficie pública de otro módulo y el núcleo compartido', async () => {
+      const codigo = [
+        "import * as flota from '../flota';",
+        "import { cn } from '../../shared/lib/cn';",
+        'export const usados = [flota, cn];',
+        '',
+      ].join('\n');
+      expect(await reglasVioladas(codigo, 'src/modules/red/index.ts')).toEqual([]);
+    });
   });
 });
