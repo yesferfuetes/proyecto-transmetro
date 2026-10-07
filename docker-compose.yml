@@ -1,0 +1,21 @@
+# Base de datos para desarrollo local.
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: transmetro
+      POSTGRES_PASSWORD: transmetro
+      POSTGRES_DB: transmetro
+    ports:
+      - '5432:5432'
+    # La imagen 18 guarda los datos en un subdirectorio por versión de /var/lib/postgresql.
+    volumes:
+      - datos-postgres:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U transmetro -d transmetro']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  datos-postgres:

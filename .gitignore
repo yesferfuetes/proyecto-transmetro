@@ -1,0 +1,28 @@
+# Dependencias
+node_modules/
+
+# Salidas de construcción
+dist/
+.next/
+out/
+backend/openapi.json
+
+# Pruebas y cobertura
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Análisis
+.scannerwork/
+
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Sistema y editores
+.DS_Store
+*.log
+.idea/
+.vscode/
