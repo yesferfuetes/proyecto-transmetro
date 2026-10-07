@@ -4,7 +4,9 @@
 #
 #   bash scripts/railway-configurar.sh backend|frontend
 #
-# 1. Fija construcción, despliegue, salud y reinicio del servicio.
+# 1. Fija construcción, despliegue, salud y reinicio del servicio. Railway construye con el
+#    Dockerfile porque se indica dockerfilePath; su tipo de construcción no tiene un valor propio
+#    para Dockerfile.
 # 2. Si el servicio aún no tiene repositorio, lo conecta a la rama main (dispara un despliegue).
 # 3. Activa la espera del pipeline: Railway no despliega un commit cuyo pipeline no pasó.
 # Requiere la CLI de Railway con sesión iniciada.
@@ -23,7 +25,6 @@ case "$SERVICIO" in
     ID_SERVICIO=5a16594a-1e48-4db6-867f-324b4dedd67a
     CONFIGURACION='{
       "rootDirectory": "/backend",
-      "builder": "DOCKERFILE",
       "dockerfilePath": "Dockerfile",
       "watchPatterns": ["/backend/**"],
       "preDeployCommand": ["npm run migration:run"],
@@ -37,7 +38,6 @@ case "$SERVICIO" in
     ID_SERVICIO=c116fae9-d6df-4b26-8588-1a839928c179
     CONFIGURACION='{
       "rootDirectory": "/frontend",
-      "builder": "DOCKERFILE",
       "dockerfilePath": "Dockerfile",
       "watchPatterns": ["/frontend/**"],
       "healthcheckPath": "/",
