@@ -21,7 +21,8 @@
     "migration:run": "node --env-file-if-exists=.env node_modules/typeorm/cli.js migration:run -d dist/shared/database/fuente-datos.js",
     "migration:revert": "node --env-file-if-exists=.env node_modules/typeorm/cli.js migration:revert -d dist/shared/database/fuente-datos.js",
     "migration:check": "node --env-file-if-exists=.env node_modules/typeorm/cli.js migration:generate src/migrations/Deriva --check --dryrun -d dist/shared/database/fuente-datos.js",
-    "test:integracion": "node --experimental-vm-modules --no-warnings=ExperimentalWarning --env-file-if-exists=.env node_modules/jest/bin/jest.js -c jest.integracion.config.js --runInBand"
+    "test:integracion": "node --experimental-vm-modules --no-warnings=ExperimentalWarning --env-file-if-exists=.env node_modules/jest/bin/jest.js -c jest.integracion.config.js --runInBand",
+    "seed": "node --env-file-if-exists=.env dist/seeds/ejecutar.js"
   },
   "dependencies": {
     "@nestjs/common": "~12.1.2",
