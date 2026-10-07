@@ -11,6 +11,12 @@ async function reglasVioladas(codigo: string, archivo = 'src/main.ts'): Promise<
   return (resultado?.messages ?? []).map((mensaje) => mensaje.ruleId ?? 'sin-regla');
 }
 
+// La primera llamada carga el análisis con tipos; en el pipeline puede tardar más que el tiempo
+// por prueba, así que se hace antes, con su propio margen.
+beforeAll(async () => {
+  await eslint.lintText('export {};\n', { filePath: 'src/main.ts' });
+}, 60_000);
+
 describe('configuración de ESLint del backend', () => {
   it('acepta código que cumple las reglas', async () => {
     const codigo = 'export function doble(valor: number): number {\n  return valor * 2;\n}\n';

@@ -24,6 +24,12 @@ function componente(clases: string): string {
   ].join('\n');
 }
 
+// La primera llamada carga el análisis con tipos y el plugin de Tailwind; en el pipeline tarda
+// más que el tiempo por prueba, así que se hace antes, con su propio margen.
+beforeAll(async () => {
+  await eslint.lintText('export {};\n', { filePath: 'src/app/layout.tsx' });
+}, 60_000);
+
 describe('configuración de ESLint del frontend', () => {
   it('acepta un componente que usa solo tokens', async () => {
     expect(await reglasVioladas(componente('text-primary'))).toEqual([]);
