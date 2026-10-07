@@ -16,7 +16,8 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"*.{js,mjs,json}\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"*.{js,mjs,json}\"",
     "test": "NODE_OPTIONS='--experimental-vm-modules --no-warnings=ExperimentalWarning' jest",
-    "test:cov": "NODE_OPTIONS='--experimental-vm-modules --no-warnings=ExperimentalWarning' jest --coverage"
+    "test:cov": "NODE_OPTIONS='--experimental-vm-modules --no-warnings=ExperimentalWarning' jest --coverage",
+    "openapi": "node --env-file-if-exists=.env dist/openapi.js"
   },
   "dependencies": {
     "@nestjs/common": "~12.1.2",
