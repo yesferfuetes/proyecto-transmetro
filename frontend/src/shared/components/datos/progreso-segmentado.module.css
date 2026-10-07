@@ -1,0 +1,9 @@
+/* Posiciones y pesos calculados en tiempo de ejecución; el resto del aspecto usa tokens. */
+.segmento {
+  flex: var(--peso) 1 0%;
+}
+
+.posicionado {
+  inset-inline-start: var(--posicion);
+  transform: translateX(-50%);
+}
