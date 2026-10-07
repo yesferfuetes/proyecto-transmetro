@@ -5,3 +5,4 @@ export { FiltroFechas } from './filtro-fechas';
 export { FiltroOpcion } from './filtro-opcion';
 export { FiltroSeleccion, type OpcionFiltro } from './filtro-seleccion';
 export { TablaDatos, type Columna } from './tabla-datos';
+export { AccionesFila } from './acciones-fila';
