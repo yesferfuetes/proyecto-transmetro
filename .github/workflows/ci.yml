@@ -1,0 +1,184 @@
+name: Integración continua
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Base de los servicios de PostgreSQL de los trabajos backend y e2e.
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/transmetro
+
+jobs:
+  verificacion:
+    name: Verificación del repositorio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Términos no permitidos en archivos versionados
+        run: bash scripts/verificar-terminos.sh
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: transmetro
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d transmetro"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:cov
+      - run: npm run build
+      - name: Pruebas de integración (migración, deriva y semillas)
+        run: npm run test:integracion
+      - name: Migración y chequeo de deriva con la CLI
+        run: |
+          npm run migration:run
+          npm run migration:check
+      - run: npm run openapi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cobertura-backend
+          path: backend/coverage/lcov.info
+      - uses: actions/upload-artifact@v7
+        with:
+          name: openapi
+          path: backend/openapi.json
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:cov
+      - run: npm run build
+      - run: npm run tamano-paquete
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cobertura-frontend
+          path: frontend/coverage/lcov.info
+
+  e2e:
+    name: Extremo a extremo
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: transmetro
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d transmetro"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      BACKEND_URL: http://localhost:3001
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - name: Levantar el backend
+        working-directory: backend
+        run: |
+          npm ci
+          npm run build
+          npm run migration:run
+          NODE_ENV=production nohup npm run start > ../backend.log 2>&1 &
+          for _ in $(seq 1 30); do
+            curl -sf http://localhost:3001/health && exit 0
+            sleep 2
+          done
+          cat ../backend.log
+          exit 1
+      - name: Construir el frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+          npx playwright install --with-deps chromium
+      - name: Pruebas de extremo a extremo
+        working-directory: frontend
+        run: npm run e2e
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: informe-playwright
+          path: frontend/playwright-report
+
+  sonar:
+    name: SonarQube
+    needs: [backend, frontend]
+    # Runner propio: la instancia de SonarQube es local a esa máquina.
+    runs-on: [self-hosted, sonar]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v8
+        with:
+          name: cobertura-backend
+          path: backend/coverage
+      - uses: actions/download-artifact@v8
+        with:
+          name: cobertura-frontend
+          path: frontend/coverage
+      - name: Análisis y Quality Gate
+        uses: SonarSource/sonarqube-scan-action@v8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=300

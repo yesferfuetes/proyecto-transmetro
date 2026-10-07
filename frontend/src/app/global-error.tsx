@@ -3,10 +3,8 @@
 import type { ReactElement } from 'react';
 import './globals.css';
 
-interface PropiedadesDeError {
-  error: Error & { digest?: string };
-  reset: () => void;
-}
+// Next.js también entrega `error`; no se usa porque su mensaje puede contener detalles internos.
+type PropiedadesDeError = Readonly<{ reset: () => void }>;
 
 // Reemplaza al layout raíz cuando falla: declara su propio documento.
 export default function ErrorGlobal({ reset }: PropiedadesDeError): ReactElement {

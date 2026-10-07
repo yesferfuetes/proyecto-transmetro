@@ -2,12 +2,9 @@
 
 import type { ReactElement } from 'react';
 
-interface PropiedadesDeError {
-  error: Error & { digest?: string };
-  reset: () => void;
-}
+// Next.js también entrega `error`; no se usa porque su mensaje puede contener detalles internos.
+type PropiedadesDeError = Readonly<{ reset: () => void }>;
 
-// No se muestra el mensaje del error: puede contener detalles internos.
 export default function ErrorDeSegmento({ reset }: PropiedadesDeError): ReactElement {
   return (
     <main id="contenido" className="mx-auto flex max-w-3xl flex-col gap-4 px-6 py-16">

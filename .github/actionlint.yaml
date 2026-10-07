@@ -1,0 +1,4 @@
+self-hosted-runner:
+  # Runner propio con acceso a la instancia local de SonarQube.
+  labels:
+    - sonar
