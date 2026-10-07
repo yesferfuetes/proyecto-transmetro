@@ -1,69 +1,121 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { contraste } from './tokens-css';
 
-/** Verifica con la fórmula de WCAG 2 que cada par texto/fondo de la paleta alcanza AA (4.5:1). */
-const css = readFileSync(join(__dirname, '..', 'src', 'app', 'globals.css'), 'utf8');
-const tokens = new Map(
-  [...css.matchAll(/--color-([a-z-]+):\s*(#[0-9a-f]{6})/g)].map(([, nombre, valor]) => [
-    nombre ?? '',
-    valor ?? '',
-  ]),
-);
+/**
+ * Verifica con la fórmula de WCAG 2 cada par texto/fondo que usan los componentes.
+ * AA: 4.5:1 para texto normal; 3:1 para texto grande y para elementos no textuales.
+ */
+const TEXTO = 4.5;
+const GRANDE_O_NO_TEXTUAL = 3;
 
-function luminancia(hex: string): number {
-  const canales = [1, 3, 5].map((inicio) => parseInt(hex.slice(inicio, inicio + 2), 16) / 255);
-  const [r = 0, g = 0, b = 0] = canales.map((c) =>
-    c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4,
-  );
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function contraste(texto: string, fondo: string): number {
-  const [clara, oscura] = [luminancia(color(texto)), luminancia(color(fondo))].sort(
-    (a, b) => b - a,
-  );
-  return ((clara ?? 0) + 0.05) / ((oscura ?? 0) + 0.05);
-}
-
-function color(token: string): string {
-  const valor = tokens.get(token);
-  if (!valor) {
-    throw new Error(`El token --color-${token} no está declarado.`);
-  }
-  return valor;
-}
-
+const FONDOS_CLAROS = ['surface', 'canvas', 'primary-soft', 'neutral-50'];
 const TEXTOS_SOBRE_CLARO = [
+  'ink',
+  'ink-muted',
   'primary',
   'primary-strong',
   'accent-strong',
   'danger',
-  'success',
+  'danger-strong',
   'warning',
-  'ink',
-  'ink-muted',
+  'warning-strong',
+  'success',
 ];
 
-describe('contraste de la paleta', () => {
-  it.each(
-    TEXTOS_SOBRE_CLARO.flatMap((texto) => [
-      [texto, 'surface'],
-      [texto, 'canvas'],
-    ]),
-  )('%s sobre %s alcanza 4.5:1', (texto, fondo) => {
-    expect(contraste(texto ?? '', fondo ?? '')).toBeGreaterThanOrEqual(4.5);
+const FONDOS_OSCUROS = ['primary', 'night-mid', 'night-raised', 'night'];
+const TEXTOS_SOBRE_OSCURO = [
+  'ink-inverse',
+  'accent',
+  'ink-inverse-muted',
+  'danger-on-night',
+  'success-on-night',
+  'neutral-400',
+];
+
+function pares(textos: string[], fondos: string[]): [string, string][] {
+  return textos.flatMap((texto) => fondos.map((fondo): [string, string] => [texto, fondo]));
+}
+
+describe('contraste del texto', () => {
+  it.each(pares(TEXTOS_SOBRE_CLARO, FONDOS_CLAROS))('%s sobre %s', (texto, fondo) => {
+    expect(contraste(texto, fondo)).toBeGreaterThanOrEqual(TEXTO);
+  });
+
+  it.each(pares(TEXTOS_SOBRE_OSCURO, FONDOS_OSCUROS))('%s sobre %s', (texto, fondo) => {
+    expect(contraste(texto, fondo)).toBeGreaterThanOrEqual(TEXTO);
   });
 
   it.each([
-    ['surface', 'primary'],
-    ['surface', 'primary-strong'],
+    ['warning-on-night', 'night-raised'],
+    ['warning-on-night', 'night'],
+    ['danger-strong', 'danger-soft'],
+    ['warning-strong', 'warning-soft'],
+    ['success-strong', 'success-soft'],
+    ['ink', 'danger-soft'],
+    ['ink', 'warning-soft'],
+    ['ink', 'success-soft'],
     ['ink', 'accent'],
-  ])('%s sobre %s alcanza 4.5:1', (texto, fondo) => {
-    expect(contraste(texto, fondo)).toBeGreaterThanOrEqual(4.5);
+    ['ink', 'accent-light'],
+    ['ink', 'accent-500'],
+    ['night', 'accent'],
+    ['ink-inverse', 'danger'],
+    ['ink-inverse', 'success'],
+    ['ink-inverse', 'warning-strong'],
+    ['ink-inverse', 'neutral-600'],
+  ])('%s sobre %s', (texto, fondo) => {
+    expect(contraste(texto, fondo)).toBeGreaterThanOrEqual(TEXTO);
   });
 
-  it('el acento no se usa como texto sobre claro: no alcanza 4.5:1', () => {
-    expect(contraste('accent', 'surface')).toBeLessThan(4.5);
+  it('el acento no se usa como texto sobre claro', () => {
+    expect(contraste('accent', 'surface')).toBeLessThan(TEXTO);
   });
+
+  it('el borde fuerte no se usa como texto', () => {
+    expect(contraste('border-strong', 'surface')).toBeLessThan(TEXTO);
+  });
+});
+
+describe('contraste de elementos no textuales', () => {
+  it.each([
+    ['border-strong', 'surface'],
+    ['border-strong', 'canvas'],
+    ['primary', 'surface'],
+    ['primary', 'canvas'],
+    ['accent', 'night'],
+    ['accent', 'night-raised'],
+    ['warning', 'surface'],
+    ['success-600', 'surface'],
+    ['danger', 'surface'],
+    ['warning-on-night', 'night'],
+    ['success-on-night', 'night'],
+    ['danger-on-night', 'night'],
+    ['neutral-400', 'night'],
+  ])('%s sobre %s alcanza 3:1', (elemento, fondo) => {
+    expect(contraste(elemento, fondo)).toBeGreaterThanOrEqual(GRANDE_O_NO_TEXTUAL);
+  });
+});
+
+describe('contraste de las insignias de línea', () => {
+  const TEXTO_DE_LINEA: [string, string][] = [
+    ['linea-1', 'ink-inverse'],
+    ['linea-2', 'ink'],
+    ['linea-6', 'ink'],
+    ['linea-7', 'ink'],
+    ['linea-12', 'ink'],
+    ['linea-13', 'ink'],
+    ['linea-18', 'ink'],
+    ['linea-r5', 'ink-inverse'],
+    ['neutral-600', 'ink-inverse'],
+  ];
+
+  it.each(TEXTO_DE_LINEA)('el número sobre %s alcanza 3:1 como texto grande', (linea, texto) => {
+    expect(contraste(texto, linea)).toBeGreaterThanOrEqual(GRANDE_O_NO_TEXTUAL);
+  });
+
+  it.each(TEXTO_DE_LINEA.filter(([linea]) => linea !== 'linea-12'))(
+    'el número sobre %s alcanza 4.5:1',
+    (linea, texto) => {
+      expect(contraste(texto, linea)).toBeGreaterThanOrEqual(TEXTO);
+    },
+  );
 });

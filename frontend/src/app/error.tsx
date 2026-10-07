@@ -8,7 +8,7 @@ type PropiedadesDeError = Readonly<{ reset: () => void }>;
 export default function ErrorDeSegmento({ reset }: PropiedadesDeError): ReactElement {
   return (
     <main id="contenido" className="mx-auto flex max-w-3xl flex-col gap-4 px-6 py-16">
-      <h1 role="alert" className="text-2xl font-bold text-danger">
+      <h1 role="alert" className="text-heading font-bold text-danger">
         Algo salió mal
       </h1>
       <p className="text-ink-muted">No se pudo mostrar esta página. Intenta de nuevo.</p>
