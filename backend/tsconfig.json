@@ -3,7 +3,7 @@
     "module": "commonjs",
     "target": "ES2023",
     "lib": ["ES2023"],
-    "types": ["node"],
+    "types": ["node", "jest"],
     "strict": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
@@ -16,7 +16,7 @@
     "incremental": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "."
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }
