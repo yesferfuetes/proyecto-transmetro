@@ -2,12 +2,12 @@ import { ESLint } from 'eslint';
 
 /**
  * Comprueba que la configuración de ESLint rechaza lo que el estándar de backend prohíbe.
- * Cada caso analiza un texto como si fuera el contenido de src/main.ts.
+ * Cada caso analiza un texto como si fuera el contenido de un archivo existente del proyecto.
  */
 const eslint = new ESLint({ cwd: process.cwd() });
 
-async function reglasVioladas(codigo: string): Promise<string[]> {
-  const [resultado] = await eslint.lintText(codigo, { filePath: 'src/main.ts' });
+async function reglasVioladas(codigo: string, archivo = 'src/main.ts'): Promise<string[]> {
+  const [resultado] = await eslint.lintText(codigo, { filePath: archivo });
   return (resultado?.messages ?? []).map((mensaje) => mensaje.ruleId ?? 'sin-regla');
 }
 
@@ -64,5 +64,31 @@ describe('configuración de ESLint del backend', () => {
   it('rechaza suprimir errores del compilador con ts-ignore', async () => {
     const codigo = '// @ts-ignore\nexport const valor: number = 1;\n';
     expect(await reglasVioladas(codigo)).toContain('@typescript-eslint/ban-ts-comment');
+  });
+
+  it('rechaza que un módulo importe de otro módulo de negocio', async () => {
+    const codigo =
+      "import { RedModule } from '../red/red.module';\nexport const modulo = RedModule;\n";
+    expect(await reglasVioladas(codigo, 'src/flota/flota.module.ts')).toContain(
+      'boundaries/dependencies',
+    );
+  });
+
+  it('permite que un módulo importe del núcleo compartido y de sí mismo', async () => {
+    const codigo = [
+      "import { ErrorDeNegocio } from '../shared/errors/error-de-negocio';",
+      "import { FlotaError } from './errors/businessError';",
+      'export const bases = [ErrorDeNegocio, FlotaError];',
+      '',
+    ].join('\n');
+    expect(await reglasVioladas(codigo, 'src/flota/flota.module.ts')).toEqual([]);
+  });
+
+  it('rechaza que el núcleo compartido importe de un módulo de negocio', async () => {
+    const codigo =
+      "import { FlotaModule } from '../flota/flota.module';\nexport const m = FlotaModule;\n";
+    expect(await reglasVioladas(codigo, 'src/shared/nucleo.module.ts')).toContain(
+      'boundaries/dependencies',
+    );
   });
 });
