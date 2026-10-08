@@ -43,9 +43,7 @@ export default async function PaginaLinea({
         ) : null
       }
       cambioDeEstado={
-        esSupervisor ? (
-          <CambioDeEstadoLinea key={linea.estado} lineaId={linea.id} estado={linea.estado} />
-        ) : null
+        esSupervisor ? <CambioDeEstadoLinea lineaId={linea.id} estado={linea.estado} /> : null
       }
     />
   );
