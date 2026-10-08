@@ -2,7 +2,7 @@ import { BaseTemporal, contar, crearBaseTemporal } from './base-temporal';
 
 const ESQUEMA = "connamespace = 'transmetro'::regnamespace";
 
-describe('migración inicial sobre una base vacía', () => {
+describe('migraciones sobre una base vacía', () => {
   let base: BaseTemporal;
 
   beforeAll(async () => {
@@ -14,17 +14,17 @@ describe('migración inicial sobre una base vacía', () => {
     await base.eliminar();
   });
 
-  it('crea las 13 tablas en el esquema transmetro', async () => {
+  it('crea las 14 tablas en el esquema transmetro', async () => {
     const total = await contar(
       base.fuente,
       "SELECT count(*) AS total FROM information_schema.tables WHERE table_schema = 'transmetro'",
     );
-    expect(total).toBe(13);
+    expect(total).toBe(14);
   });
 
-  it('crea las 16 llaves foráneas', async () => {
+  it('crea las 17 llaves foráneas', async () => {
     const consulta = `SELECT count(*) AS total FROM pg_constraint WHERE contype = 'f' AND ${ESQUEMA}`;
-    expect(await contar(base.fuente, consulta)).toBe(16);
+    expect(await contar(base.fuente, consulta)).toBe(17);
   });
 
   it('crea solo los 6 CHECK de rango simple', async () => {
@@ -32,10 +32,10 @@ describe('migración inicial sobre una base vacía', () => {
     expect(await contar(base.fuente, consulta)).toBe(6);
   });
 
-  it('crea los 8 índices de apoyo', async () => {
+  it('crea los 10 índices de apoyo', async () => {
     const consulta =
       "SELECT count(*) AS total FROM pg_indexes WHERE schemaname = 'transmetro' AND indexname LIKE 'idx\\_%'";
-    expect(await contar(base.fuente, consulta)).toBe(8);
+    expect(await contar(base.fuente, consulta)).toBe(10);
   });
 
   it('no crea triggers ni funciones', async () => {
@@ -56,7 +56,7 @@ describe('migración inicial sobre una base vacía', () => {
     const consulta = (tipo: string): string =>
       `SELECT count(*) AS total FROM information_schema.columns
        WHERE table_schema = 'transmetro' AND data_type = '${tipo}'`;
-    expect(await contar(base.fuente, consulta('timestamp with time zone'))).toBe(4);
+    expect(await contar(base.fuente, consulta('timestamp with time zone'))).toBe(5);
     expect(await contar(base.fuente, consulta('timestamp without time zone'))).toBe(0);
   });
 
@@ -66,7 +66,7 @@ describe('migración inicial sobre una base vacía', () => {
     expect(await contar(base.fuente, consulta)).toBe(1);
   });
 
-  it('una conexión nueva la reconoce como aplicada', async () => {
+  it('una conexión nueva las reconoce como aplicadas', async () => {
     const otra = await base.abrirOtraConexion();
     try {
       expect(await otra.showMigrations()).toBe(false);
@@ -75,7 +75,21 @@ describe('migración inicial sobre una base vacía', () => {
     }
   });
 
-  it('al revertirla elimina el esquema transmetro', async () => {
+  it('al revertir la última elimina solo la tabla de auditoría', async () => {
+    await base.fuente.undoLastMigration();
+    const tablas = await contar(
+      base.fuente,
+      "SELECT count(*) AS total FROM information_schema.tables WHERE table_schema = 'transmetro'",
+    );
+    const auditoria = await contar(
+      base.fuente,
+      "SELECT count(*) AS total FROM information_schema.tables WHERE table_schema = 'transmetro' AND table_name = 'auditoria'",
+    );
+    expect(tablas).toBe(13);
+    expect(auditoria).toBe(0);
+  });
+
+  it('al revertir la inicial elimina el esquema transmetro', async () => {
     await base.fuente.undoLastMigration();
     const consulta =
       "SELECT count(*) AS total FROM information_schema.schemata WHERE schema_name = 'transmetro'";

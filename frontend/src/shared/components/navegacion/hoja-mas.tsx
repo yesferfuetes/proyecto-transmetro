@@ -1,15 +1,19 @@
 'use client';
 
-import { useState, type ReactElement } from 'react';
+import { useState, type ReactElement, type ReactNode } from 'react';
 import { Hoja } from '@/shared/components/superposiciones';
 import { Icono } from '@/shared/components/utilidades';
 import type { Destino } from './destinos';
 import { EnlaceNavegacion } from './enlace-navegacion';
 
-type Propiedades = Readonly<{ destinos: readonly Destino[] }>;
+type Propiedades = Readonly<{
+  destinos: readonly Destino[];
+  /** Contenido bajo los destinos, como la cuenta y el cierre de sesión. */
+  pie?: ReactNode;
+}>;
 
 /** Botón "Más" de la barra inferior: abre una hoja con los destinos que no caben. */
-export function HojaMas({ destinos }: Propiedades): ReactElement {
+export function HojaMas({ destinos, pie }: Propiedades): ReactElement {
   const [abierta, setAbierta] = useState(false);
   const cerrar = (): void => setAbierta(false);
   return (
@@ -31,6 +35,11 @@ export function HojaMas({ destinos }: Propiedades): ReactElement {
             </li>
           ))}
         </ul>
+        {pie === undefined ? null : (
+          <div className="mt-4 flex flex-col items-start gap-2 border-t border-border px-4 pt-4">
+            {pie}
+          </div>
+        )}
       </Hoja>
     </>
   );

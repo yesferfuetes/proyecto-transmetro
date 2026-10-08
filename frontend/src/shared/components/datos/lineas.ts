@@ -107,7 +107,11 @@ export type EstiloResuelto = Readonly<{
 
 /** Estilo de identidad de una línea. Una línea sin color asignado usa la insignia neutra. */
 export function estiloDeLinea(codigo: CodigoLinea, tono: Tono = 'claro'): EstiloResuelto {
-  const normalizado = codigo.trim().toUpperCase();
+  // El backend nombra las líneas "L1", "L12"; el color y el rótulo usan solo el número.
+  const normalizado = codigo
+    .trim()
+    .toUpperCase()
+    .replace(/^L(?=\d+$)/, '');
   const estilo = LINEAS[normalizado] ?? neutra(normalizado);
   return {
     insignia: estilo.insignia,

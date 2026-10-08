@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
-import { solicitar } from './cliente-backend';
+import { leerToken } from '@/shared/lib/sesion/cookie';
+import { solicitar, solicitarConSesion } from './cliente-backend';
+
+vi.mock('@/shared/lib/sesion/cookie', () => ({ leerToken: vi.fn() }));
 
 const esquemaLinea = z.object({ codigo: z.string(), nombre: z.string() });
 const fetchSimulado = vi.fn<typeof fetch>();
@@ -109,5 +112,35 @@ describe('cliente del backend', () => {
     });
 
     expect(resultado).toEqual({ ok: true, datos: undefined });
+  });
+
+  it('envía el token como Authorization: Bearer', async () => {
+    fetchSimulado.mockResolvedValue(respuesta('{"codigo":"L1","nombre":"Línea 1"}'));
+
+    await solicitar({ ruta: '/lineas/1', esquema: esquemaLinea, token: 'tok' });
+
+    const [, opciones] = fetchSimulado.mock.calls[0] ?? [];
+    expect(opciones?.headers).toMatchObject({ Authorization: 'Bearer tok' });
+  });
+
+  it('con sesión toma el token de la cookie', async () => {
+    vi.mocked(leerToken).mockResolvedValue('de-la-cookie');
+    fetchSimulado.mockResolvedValue(respuesta('{"codigo":"L1","nombre":"Línea 1"}'));
+
+    const resultado = await solicitarConSesion({ ruta: '/lineas/1', esquema: esquemaLinea });
+
+    const [, opciones] = fetchSimulado.mock.calls[0] ?? [];
+    expect(opciones?.headers).toMatchObject({ Authorization: 'Bearer de-la-cookie' });
+    expect(resultado.ok).toBe(true);
+  });
+
+  it('con sesión y sin cookie no envía Authorization', async () => {
+    vi.mocked(leerToken).mockResolvedValue(undefined);
+    fetchSimulado.mockResolvedValue(respuesta('{"codigo":"L1","nombre":"Línea 1"}'));
+
+    await solicitarConSesion({ ruta: '/lineas/1', esquema: esquemaLinea });
+
+    const [, opciones] = fetchSimulado.mock.calls[0] ?? [];
+    expect(opciones?.headers).not.toHaveProperty('Authorization');
   });
 });
