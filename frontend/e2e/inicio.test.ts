@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { contrasenaSembrada, iniciarSesion, SUPERVISOR } from './usuarios/apoyo';
 
 const MOVIL = { width: 390, height: 844 };
 const ESCRITORIO = { width: 1280, height: 800 };
@@ -15,16 +16,20 @@ function navegacion(page: Page): ReturnType<Page['getByRole']> {
   return page.getByRole('navigation', { name: 'Principal' });
 }
 
+// Inicio exige sesión: cada prueba entra como el supervisor sembrado.
+test.beforeEach(async ({ page }) => {
+  await iniciarSesion(page, SUPERVISOR, contrasenaSembrada());
+});
+
 test.describe('Inicio en móvil', () => {
   test.use({ viewport: MOVIL });
 
-  test('muestra la cifra, los mosaicos y la barra inferior sin desplazamiento horizontal', async ({
+  test('muestra los mosaicos y la barra inferior sin desplazamiento horizontal', async ({
     page,
   }) => {
     await page.goto('/inicio');
 
     await expect(page.getByRole('heading', { level: 1, name: 'Inicio' })).toBeAttached();
-    await expect(page.getByText(/Alertas de capacidad activas/)).toBeVisible();
     await expect(page.getByRole('link', { name: 'Estaciones' }).first()).toBeVisible();
     const anchoMosaico = await page
       .getByRole('region', { name: 'Accesos rápidos' })
@@ -38,12 +43,15 @@ test.describe('Inicio en móvil', () => {
     expect(anchoDelDocumento).toBeLessThanOrEqual(MOVIL.width);
   });
 
-  test('"Más" abre la hoja con el resto de destinos y Esc la cierra', async ({ page }) => {
+  test('"Más" abre la hoja con la cuenta y el cierre de sesión, y Esc la cierra', async ({
+    page,
+  }) => {
     await page.goto('/inicio');
 
     await navegacion(page).getByRole('button', { name: 'Más' }).click();
     const hoja = page.getByRole('dialog', { name: 'Más opciones' });
-    await expect(hoja.getByRole('link', { name: 'Reportes' })).toBeVisible();
+    await expect(hoja.getByRole('link', { name: /mi cuenta/ })).toBeVisible();
+    await expect(hoja.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
 
     await page.keyboard.press('Escape');
     await expect(hoja).toBeHidden();
@@ -74,7 +82,7 @@ test.describe('Inicio en escritorio', () => {
     const anchos = await mosaicos.evaluateAll((enlaces) =>
       enlaces.map((enlace) => enlace.getBoundingClientRect().width),
     );
-    expect(anchos).toHaveLength(6);
+    expect(anchos).toHaveLength(3);
     expect(new Set(anchos)).toEqual(new Set([104]));
   });
 
@@ -98,7 +106,12 @@ test.describe('Inicio en escritorio', () => {
     await page.keyboard.press('Enter');
     await expect(page.locator('main#contenido')).toBeFocused();
 
-    for (let paso = 0; paso < 6; paso += 1) {
+    // Tras el contenido principal, el foco recorre los mosaicos de Inicio.
+    const mosaicos = await page
+      .getByRole('region', { name: 'Accesos rápidos' })
+      .getByRole('link')
+      .count();
+    for (let paso = 0; paso < mosaicos; paso += 1) {
       await page.keyboard.press('Tab');
       const anillo = await page.evaluate(() => {
         const elemento = document.activeElement;

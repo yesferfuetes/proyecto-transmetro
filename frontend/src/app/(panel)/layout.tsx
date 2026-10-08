@@ -1,8 +1,10 @@
 import type { ReactElement, ReactNode } from 'react';
+import { BotonCerrarSesion } from '@/modules/usuarios';
 import { destinosPermitidos, NavegacionPrincipal } from '@/shared/components/navegacion';
 import { RegionAvisos } from '@/shared/components/superposiciones';
-import { obtenerSesionDeEjemplo } from './_ejemplo/sesion';
-import { DESTINOS, ETIQUETA_DE_ROL } from './destinos';
+import { exigirSesion } from '@/shared/lib/sesion/sesion';
+import { ETIQUETA_DE_ROL } from '@/shared/schemas/sesion';
+import { DESTINOS } from './destinos';
 
 // Dinámico: depende de la sesión y no se guarda en caché compartida.
 export const dynamic = 'force-dynamic';
@@ -10,12 +12,18 @@ export const dynamic = 'force-dynamic';
 type Propiedades = Readonly<{ children: ReactNode }>;
 
 export default async function LayoutPanel({ children }: Propiedades): Promise<ReactElement> {
-  const sesion = await obtenerSesionDeEjemplo();
+  const sesion = await exigirSesion();
+  const rol = ETIQUETA_DE_ROL[sesion.rol];
   return (
     <div className="lg:flex">
       <NavegacionPrincipal
         destinos={destinosPermitidos(DESTINOS, sesion.rol)}
-        usuario={{ nombre: sesion.nombre, rol: ETIQUETA_DE_ROL[sesion.rol] ?? sesion.rol }}
+        usuario={{
+          nombre: sesion.nombre,
+          rol: sesion.estacion === null ? rol : `${rol} · ${sesion.estacion.nombre}`,
+        }}
+        cuenta="/mi-cuenta"
+        cierreDeSesion={<BotonCerrarSesion />}
       />
       <main
         id="contenido"
