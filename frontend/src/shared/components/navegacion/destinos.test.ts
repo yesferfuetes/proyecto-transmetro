@@ -34,6 +34,13 @@ describe('particionarNavegacion', () => {
     expect(mas.map((d) => d.href)).toEqual(['/e', '/f', '/g']);
   });
 
+  it('si se pide "Más", deja como máximo cuatro visibles aunque todos cupieran', () => {
+    const cinco = particionarNavegacion(siete.slice(0, 5), 4, true);
+    expect(cinco.visibles).toHaveLength(4);
+    expect(cinco.mas.map((d) => d.href)).toEqual(['/e']);
+    expect(particionarNavegacion(siete.slice(0, 3), 4, true).visibles).toHaveLength(3);
+  });
+
   it('con cinco o menos no agrega "Más"', () => {
     expect(particionarNavegacion(siete.slice(0, 5)).mas).toEqual([]);
     expect(particionarNavegacion(siete.slice(0, 3)).visibles).toHaveLength(3);

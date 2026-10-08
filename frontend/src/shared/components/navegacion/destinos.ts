@@ -15,13 +15,14 @@ export function destinosPermitidos(destinos: readonly Destino[], rol: string): D
 
 /**
  * Reparte los destinos de la barra inferior: caben `visibles` más el botón "Más". Si todos caben
- * sin ese botón, no se agrega.
+ * sin ese botón y no se pide `conMas`, no se agrega.
  */
 export function particionarNavegacion(
   destinos: readonly Destino[],
   visibles = 4,
+  conMas = false,
 ): { visibles: Destino[]; mas: Destino[] } {
-  if (destinos.length <= visibles + 1) {
+  if (!conMas && destinos.length <= visibles + 1) {
     return { visibles: [...destinos], mas: [] };
   }
   return { visibles: destinos.slice(0, visibles), mas: destinos.slice(visibles) };
