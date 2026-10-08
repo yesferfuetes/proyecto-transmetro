@@ -30,6 +30,8 @@ const nombreDe = (fila: FilaEditable): string => `${fila.codigo} ${fila.nombre}`
 /** Estado del editor: lista ordenada, anuncios para lector de pantalla y envío. */
 export function useEditorDeRecorrido(lineaId: number, inicial: FilaEditable[]): Editor {
   const formulario = useForm<ValoresEditor>({ defaultValues: { paradas: inicial } });
+  // Orden y nombres salen de `lista.fields`, que cambia en el mismo render que el movimiento.
+  // `useWatch` se entera después del commit: mezclarlos rotula una fila con el nombre de otra.
   const lista = useFieldArray({ control: formulario.control, name: 'paradas' });
   const paradas = useWatch({ control: formulario.control, name: 'paradas' });
   const [anuncio, setAnuncio] = useState('');
@@ -37,17 +39,17 @@ export function useEditorDeRecorrido(lineaId: number, inicial: FilaEditable[]): 
 
   const mover = (indice: number, paso: -1 | 1): void => {
     const destino = indice + paso;
-    const fila = paradas[indice];
-    if (fila === undefined || destino < 0 || destino >= paradas.length) {
+    const fila = lista.fields[indice];
+    if (fila === undefined || destino < 0 || destino >= lista.fields.length) {
       return;
     }
     formulario.clearErrors();
     lista.move(indice, destino);
-    setAnuncio(`${nombreDe(fila)} pasó a la posición ${destino + 1} de ${paradas.length}.`);
+    setAnuncio(`${nombreDe(fila)} pasó a la posición ${destino + 1} de ${lista.fields.length}.`);
   };
 
   const quitar = (indice: number): void => {
-    const fila = paradas[indice];
+    const fila = lista.fields[indice];
     if (fila === undefined) {
       return;
     }
@@ -58,7 +60,9 @@ export function useEditorDeRecorrido(lineaId: number, inicial: FilaEditable[]): 
 
   const agregar = (fila: Omit<FilaEditable, 'distancia'>): void => {
     lista.append({ ...fila, distancia: '' }, { shouldFocus: false });
-    setAnuncio(`Se agregó ${fila.codigo} ${fila.nombre} en la posición ${paradas.length + 1}.`);
+    setAnuncio(
+      `Se agregó ${fila.codigo} ${fila.nombre} en la posición ${lista.fields.length + 1}.`,
+    );
   };
 
   const enviar = formulario.handleSubmit((valores) => {

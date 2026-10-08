@@ -72,7 +72,7 @@ export function EditorDeRecorrido({
                 key={fila.id}
                 clave={fila.id}
                 codigoLinea={codigoLinea}
-                fila={editor.paradas[indice] ?? fila}
+                fila={fila}
                 posicion={indice + 1}
                 total={editor.filas.length}
                 distancia={editor.formulario.register(`paradas.${indice}.distancia`)}
