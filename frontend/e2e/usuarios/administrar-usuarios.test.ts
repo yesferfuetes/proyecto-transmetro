@@ -79,7 +79,7 @@ test.describe('administración de usuarios', () => {
     await abrirUsuario(page, usuario);
     const nueva = `${usuario.contrasena}Nueva9`;
 
-    await page.getByLabel('Contraseña nueva').fill(nueva);
+    await page.getByRole('textbox', { name: 'Contraseña nueva', exact: true }).fill(nueva);
     await page.getByLabel('Repite la contraseña nueva').fill(nueva);
     await page.getByRole('button', { name: 'Asignar contraseña' }).click();
     await expect(page.getByText('Contraseña asignada.')).toBeVisible();

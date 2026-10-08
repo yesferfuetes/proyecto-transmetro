@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { iniciarSesion, KM, registrarEstacion, sufijoUnico } from './apoyo';
+import { iniciarSesion, KM, registrarEstacion, sufijoUnico, esperarHidratacion } from './apoyo';
 
 async function agregarParada(page: Page, codigo: string): Promise<void> {
   const buscador = page.getByRole('combobox', { name: 'Agregar estación al final' });
@@ -58,8 +58,11 @@ test('el supervisor arma, activa y corrige el recorrido de una línea', async ({
 
   // Reordenar: la última sube un lugar y recibe su distancia; 1.200 + 0.200 = 1.400.
   await page.getByRole('link', { name: 'Editar recorrido' }).click();
+  await esperarHidratacion(page);
   await page.getByRole('button', { name: `Subir ${c} Parada ${c}` }).focus();
   await page.keyboard.press('Enter');
+  // El editor anuncia el movimiento; recién entonces la parada tiene su campo de distancia.
+  await expect(page.getByText(`${c} Parada ${c} pasó a la posición 2 de 3.`)).toBeAttached();
   await page.getByLabel(`Distancia de ${c} a la siguiente`).fill('0.2');
   await expect(page.getByLabel(`Distancia de ${b} a la siguiente`)).toBeDisabled();
   await expect(longitudAlGuardar(page)).toContainText(KM('1.400'));
@@ -71,7 +74,7 @@ test('el supervisor arma, activa y corrige el recorrido de una línea', async ({
   await page.getByRole('link', { name: 'Editar recorrido' }).click();
   await page.getByRole('button', { name: `Quitar ${b} Parada ${b}` }).click();
   await page.getByRole('button', { name: 'Guardar recorrido' }).click();
-  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.getByRole('alert').filter({ hasText: /\S/ })).toBeVisible();
   await expect(page).toHaveURL(/\/recorrido$/);
 
   await page.goto(detalle);

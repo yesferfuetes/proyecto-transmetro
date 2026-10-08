@@ -23,7 +23,7 @@ export function sufijoUnico(): string {
 export async function iniciarSesion(page: Page, correo: string, contrasena: string): Promise<void> {
   await page.goto('/login');
   await page.getByLabel('Correo').fill(correo);
-  await page.getByLabel('Contraseña').fill(contrasena);
+  await page.getByLabel('Contraseña', { exact: true }).fill(contrasena);
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
   await expect(page).toHaveURL(/\/inicio$/);
 }
@@ -35,9 +35,9 @@ export async function intentarIniciarSesion(
 ): Promise<string> {
   await page.goto('/login');
   await page.getByLabel('Correo').fill(correo);
-  await page.getByLabel('Contraseña').fill(contrasena);
+  await page.getByLabel('Contraseña', { exact: true }).fill(contrasena);
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
-  const alerta = page.getByRole('alert');
+  const alerta = page.getByRole('alert').filter({ hasText: /\S/ });
   await expect(alerta).toBeVisible();
   await expect(page).toHaveURL(/\/login/);
   return (await alerta.textContent()) ?? '';

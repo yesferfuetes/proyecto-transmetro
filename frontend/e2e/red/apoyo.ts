@@ -14,13 +14,13 @@ export function sufijoUnico(): string {
 }
 
 export async function iniciarSesion(page: Page, usuario: keyof typeof USUARIOS): Promise<void> {
-  const contrasena = process.env.SEED_CONTRASENA;
+  const contrasena = process.env.E2E_CONTRASENA;
   if (!contrasena) {
-    throw new Error('Define SEED_CONTRASENA con la contraseña de los usuarios sembrados.');
+    throw new Error('Define E2E_CONTRASENA con la contraseña de los usuarios sembrados.');
   }
   await page.goto('/login');
   await page.getByLabel('Correo').fill(USUARIOS[usuario]);
-  await page.getByLabel('Contraseña').fill(contrasena);
+  await page.getByLabel('Contraseña', { exact: true }).fill(contrasena);
   await page.getByRole('button', { name: /iniciar sesión|entrar/i }).click();
   await expect(page).toHaveURL(/\/inicio/);
 }
@@ -28,6 +28,8 @@ export async function iniciarSesion(page: Page, usuario: keyof typeof USUARIOS):
 /** Avanza por la paginación hasta que el localizador aparece en la página. */
 export async function buscarEnPaginas(page: Page, objetivo: Locator): Promise<void> {
   for (;;) {
+    // La página termina de cargar cuando su tabla aparece; antes solo está el esqueleto.
+    await page.getByRole('table').first().waitFor();
     if ((await objetivo.count()) > 0) {
       return;
     }
@@ -65,3 +67,13 @@ export async function registrarEstacion(
 }
 
 export const KM = (texto: string): RegExp => new RegExp(`${texto.replace('.', '[.,]')} km`);
+
+/** Espera a que React tome el formulario: una pulsación antes de hidratar se pierde. */
+export async function esperarHidratacion(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    const formulario = document.querySelector('main form');
+    return (
+      formulario !== null && Object.keys(formulario).some((clave) => clave.startsWith('__react'))
+    );
+  });
+}

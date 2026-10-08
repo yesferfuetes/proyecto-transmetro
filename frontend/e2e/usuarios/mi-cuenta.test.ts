@@ -25,7 +25,7 @@ test.describe('mi cuenta', () => {
 
     const nueva = `${usuario.contrasena}Otra7`;
     await page.getByLabel('Contraseña actual').fill(usuario.contrasena);
-    await page.getByLabel('Contraseña nueva').fill(nueva);
+    await page.getByLabel('Contraseña nueva', { exact: true }).fill(nueva);
     await page.getByLabel('Repite la contraseña nueva').fill(nueva);
     await page.getByRole('button', { name: 'Cambiar contraseña' }).click();
     await expect(page.getByText('Contraseña cambiada.')).toBeVisible();
@@ -43,10 +43,10 @@ test.describe('mi cuenta', () => {
 
     await page.goto('/mi-cuenta');
     await page.getByLabel('Contraseña actual').fill('noEsLaMia1');
-    await page.getByLabel('Contraseña nueva').fill('Distinta123');
+    await page.getByLabel('Contraseña nueva', { exact: true }).fill('Distinta123');
     await page.getByLabel('Repite la contraseña nueva').fill('Distinta123');
     await page.getByRole('button', { name: 'Cambiar contraseña' }).click();
-    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.getByRole('alert').filter({ hasText: /\S/ })).toBeVisible();
 
     await cerrarSesion(page);
     await iniciarSesion(page, usuario.correo, usuario.contrasena);
