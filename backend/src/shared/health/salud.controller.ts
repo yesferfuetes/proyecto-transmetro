@@ -7,9 +7,11 @@ import {
   HealthCheckAttempt,
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
+import { Publico } from '../auth/decoradores';
 import { SobreDeError } from '../errors/sobre-de-error';
 
 @ApiTags('salud')
+@Publico()
 @Controller('health')
 export class SaludController {
   constructor(
