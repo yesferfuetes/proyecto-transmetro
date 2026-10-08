@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { usePathname } from 'next/navigation';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Destino } from './destinos';
@@ -41,6 +42,38 @@ describe('NavegacionPrincipal', () => {
     const [, inferior] = screen.getAllByRole('navigation', { name: 'Principal' });
     expect(within(inferior).getAllByRole('link')).toHaveLength(4);
     expect(within(inferior).getByRole('button', { name: 'Más' })).toBeInTheDocument();
+  });
+
+  it('enlaza la cuenta desde el nombre y muestra el cierre de sesión en ambas formas', async () => {
+    const usuario = userEvent.setup();
+    render(
+      <NavegacionPrincipal
+        destinos={DESTINOS.slice(0, 3)}
+        usuario={{ nombre: 'Ana López', rol: 'Administrador' }}
+        cuenta="/mi-cuenta"
+        cierreDeSesion={<button type="submit">Cerrar sesión</button>}
+      />,
+    );
+
+    const [lateral, inferior] = screen.getAllByRole('navigation', { name: 'Principal' });
+    expect(within(lateral).getByRole('link', { name: 'Ana López, mi cuenta' })).toHaveAttribute(
+      'href',
+      '/mi-cuenta',
+    );
+    expect(within(lateral).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
+
+    // Con pocos destinos, "Más" aparece igual para llegar a la cuenta en móvil.
+    await usuario.click(within(inferior).getByRole('button', { name: 'Más' }));
+    const hoja = screen.getByRole('dialog', { name: 'Más opciones' });
+    expect(within(hoja).getByRole('link', { name: 'Ana López, mi cuenta' })).toBeInTheDocument();
+    expect(within(hoja).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
+  });
+
+  it('sin cuenta ni cierre de sesión, el nombre no es enlace', () => {
+    render(<NavegacionPrincipal destinos={DESTINOS} usuario={{ nombre: 'Ana', rol: 'Rol' }} />);
+
+    const [lateral] = screen.getAllByRole('navigation', { name: 'Principal' });
+    expect(within(lateral).queryByRole('link', { name: /mi cuenta/ })).not.toBeInTheDocument();
   });
 });
 

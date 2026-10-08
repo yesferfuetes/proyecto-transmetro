@@ -1,15 +1,10 @@
-import type { ReactElement } from 'react';
+import { redirect } from 'next/navigation';
+import { obtenerSesion } from '@/shared/lib/sesion/sesion';
 
-// Estático: no depende de sesión ni de datos.
-export const dynamic = 'force-static';
+// Dinámica: decide según la sesión.
+export const dynamic = 'force-dynamic';
 
-export default function Portada(): ReactElement {
-  return (
-    <main id="contenido" className="mx-auto flex max-w-3xl flex-col gap-4 px-6 py-16">
-      <h1 className="text-title font-bold text-primary">Transmetro</h1>
-      <p className="text-body text-ink-muted">
-        Sistema de Información y Control Operativo de la Municipalidad de Guatemala.
-      </p>
-    </main>
-  );
+/** La raíz no tiene contenido propio: lleva a Inicio con sesión y a iniciarla sin ella. */
+export default async function Raiz(): Promise<never> {
+  redirect((await obtenerSesion()) === null ? '/login' : '/inicio');
 }

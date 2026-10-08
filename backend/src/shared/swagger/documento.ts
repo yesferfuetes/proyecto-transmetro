@@ -15,6 +15,9 @@ export function construirDocumento(app: INestApplication): OpenAPIObject {
     .setTitle('Transmetro API')
     .setDescription('Sistema de Información y Control Operativo de Transmetro.')
     .setVersion(versionDelPaquete())
+    // Toda ruta exige el token de sesión salvo las públicas (inicio de sesión y salud).
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'sesion')
+    .addSecurityRequirements('sesion')
     .build();
   return SwaggerModule.createDocument(app, configuracion, { extraModels: [SobreDeError] });
 }

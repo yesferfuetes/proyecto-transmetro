@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { leerEntorno } from '@/config/entorno';
+import { leerToken } from '@/shared/lib/sesion/cookie';
 import { CODIGOS_DEL_CLIENTE, ErrorDeBackend, Resultado } from './resultado';
 
 export type MetodoHttp = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -13,6 +14,8 @@ export interface OpcionesDeSolicitud<T> {
   cuerpo?: unknown;
   cabeceras?: Record<string, string>;
   tiempoEsperaMs?: number;
+  /** Token de la sesión; viaja como `Authorization: Bearer`. */
+  token?: string;
 }
 
 const TIEMPO_DE_ESPERA_POR_DEFECTO_MS = 5000;
@@ -32,10 +35,7 @@ export async function solicitar<T>(opciones: OpcionesDeSolicitud<T>): Promise<Re
   try {
     respuesta = await fetch(new URL(opciones.ruta, leerEntorno().BACKEND_URL), {
       method: opciones.metodo ?? 'GET',
-      headers: {
-        ...(opciones.cuerpo === undefined ? {} : { 'Content-Type': 'application/json' }),
-        ...opciones.cabeceras,
-      },
+      headers: cabecerasDe(opciones),
       body: opciones.cuerpo === undefined ? undefined : JSON.stringify(opciones.cuerpo),
       cache: 'no-store',
       signal: AbortSignal.timeout(opciones.tiempoEsperaMs ?? TIEMPO_DE_ESPERA_POR_DEFECTO_MS),
@@ -55,6 +55,21 @@ export async function solicitar<T>(opciones: OpcionesDeSolicitud<T>): Promise<Re
   return datos.success
     ? { ok: true, datos: datos.data }
     : fallo(errorDeRespuesta(respuesta.status));
+}
+
+function cabecerasDe<T>(opciones: OpcionesDeSolicitud<T>): Record<string, string> {
+  return {
+    ...(opciones.cuerpo === undefined ? {} : { 'Content-Type': 'application/json' }),
+    ...(opciones.token === undefined ? {} : { Authorization: `Bearer ${opciones.token}` }),
+    ...opciones.cabeceras,
+  };
+}
+
+/** Igual que `solicitar`, con el token de la cookie de sesión. */
+export async function solicitarConSesion<T>(
+  opciones: Omit<OpcionesDeSolicitud<T>, 'token'>,
+): Promise<Resultado<T>> {
+  return solicitar({ ...opciones, token: await leerToken() });
 }
 
 type CuerpoLeido = { valido: true; valor: unknown } | { valido: false };

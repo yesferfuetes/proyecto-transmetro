@@ -34,6 +34,22 @@ describe('estiloDeLinea', () => {
     expect(estiloDeLinea(' r5 ').nombre).toBe('Ruta 5');
   });
 
+  it.each([
+    ['L1', 'bg-linea-1 text-ink-inverse', '1'],
+    ['l12', 'bg-linea-12 text-ink', '12'],
+    [' L13 ', 'bg-linea-13 text-ink', '13'],
+  ])('acepta el código del backend %s', (codigo, insignia, rotulo) => {
+    const estilo = estiloDeLinea(codigo);
+    expect(estilo.insignia).toBe(insignia);
+    expect(estilo.rotulo).toBe(rotulo);
+  });
+
+  it('no confunde una ruta ni un código que solo empieza con L', () => {
+    expect(estiloDeLinea('R5').rotulo).toBe('R5');
+    expect(estiloDeLinea('LX').insignia).toBe('bg-neutral-600 text-ink-inverse');
+    expect(estiloDeLinea('L20').nombre).toBe('Línea 20');
+  });
+
   it('una línea sin color asignado usa la insignia neutra', () => {
     const estilo = estiloDeLinea('20');
     expect(estilo.insignia).toBe('bg-neutral-600 text-ink-inverse');

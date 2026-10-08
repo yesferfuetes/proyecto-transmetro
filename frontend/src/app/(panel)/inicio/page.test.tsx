@@ -1,68 +1,62 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { exigirSesion } from '@/shared/lib/sesion/sesion';
+import type { Sesion } from '@/shared/schemas/sesion';
 import ErrorDeInicio from './error';
 import CargandoInicio from './loading';
 import Inicio from './page';
 
+vi.mock('@/shared/lib/sesion/sesion', () => ({ exigirSesion: vi.fn() }));
+
+const SUPERVISOR: Sesion = {
+  id: 2,
+  nombre: 'Ana López',
+  correo: 'ana@transmetro.test',
+  rol: 'SUPERVISOR_MUNICIPAL',
+  estacion: null,
+};
+
+function mosaicos(): string[] {
+  const accesos = screen.getByRole('region', { name: 'Accesos rápidos' });
+  return within(accesos)
+    .getAllByRole('link')
+    .map((enlace) => enlace.textContent ?? '');
+}
+
 describe('Inicio', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
-  it('muestra las alertas activas de toda la red como cifra protagonista', async () => {
+  it('saluda al usuario de la sesión con su rol', async () => {
+    vi.mocked(exigirSesion).mockResolvedValue(SUPERVISOR);
     render(await Inicio());
 
-    const franja = screen.getByRole('region', { name: 'Resumen de alertas' });
-    expect(within(franja).getByText(/Alertas de capacidad activas · toda la red/)).toBeVisible();
-    expect(within(franja).getByText('5')).toBeVisible();
-    expect(within(franja).getByText('3 sobrecupo')).toBeVisible();
-    expect(within(franja).getByText('2 baja ocupación')).toBeVisible();
-    expect(within(franja).getByRole('link', { name: 'Ver alertas' })).toHaveAttribute(
-      'href',
-      '/alertas',
-    );
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Inicio');
+    expect(screen.getByText('Ana López · Supervisor municipal')).toBeVisible();
   });
 
-  it('el supervisor ve los seis accesos rápidos en orden y sin Usuarios', async () => {
+  it('el supervisor ve los mosaicos de su menú, en orden y sin Usuarios', async () => {
+    vi.mocked(exigirSesion).mockResolvedValue(SUPERVISOR);
     render(await Inicio());
 
-    const accesos = screen.getByRole('region', { name: 'Accesos rápidos' });
-    expect(
-      within(accesos)
-        .getAllByRole('link')
-        .map((enlace) => enlace.textContent),
-    ).toEqual(['Líneas', 'Estaciones', 'Flota', 'Pilotos', 'Alertas', 'Reportes']);
+    expect(mosaicos()).toEqual(['Líneas', 'Estaciones', 'Municipalidades']);
   });
 
-  it('el administrador ve además el acceso a Usuarios', async () => {
-    vi.stubEnv('ROL_DE_EJEMPLO', 'administrador');
+  it('el administrador ve además el acceso a Usuarios, al final', async () => {
+    vi.mocked(exigirSesion).mockResolvedValue({ ...SUPERVISOR, rol: 'ADMINISTRADOR' });
     render(await Inicio());
 
-    const accesos = screen.getByRole('region', { name: 'Accesos rápidos' });
-    expect(within(accesos).getByRole('link', { name: 'Usuarios' })).toHaveAttribute(
-      'href',
-      '/usuarios',
-    );
+    expect(mosaicos()).toEqual(['Líneas', 'Estaciones', 'Municipalidades', 'Usuarios']);
   });
 
-  it('el operador ve solo las alertas de su estación', async () => {
-    vi.stubEnv('ROL_DE_EJEMPLO', 'operador');
+  it('el operador ve su estación', async () => {
+    vi.mocked(exigirSesion).mockResolvedValue({
+      ...SUPERVISOR,
+      rol: 'OPERADOR_ESTACION',
+      estacion: { id: 1, codigo: 'E001', nombre: 'San Sebastián' },
+    });
     render(await Inicio());
 
-    expect(screen.getByText(/Alertas de capacidad activas · Estación El Trébol/)).toBeVisible();
-    const tabla = screen.getByRole('table', { name: 'Últimas alertas de capacidad activas' });
-    expect(within(tabla).getAllByRole('row')).toHaveLength(3);
-  });
-
-  it('lista las alertas recientes con su línea, ocupación y estado', async () => {
-    render(await Inicio());
-
-    const tabla = screen.getByRole('table', { name: 'Últimas alertas de capacidad activas' });
-    const fila = within(tabla).getByRole('row', { name: /El Trébol/ });
-    expect(within(fila).getByText('Línea 12')).toBeInTheDocument();
-    expect(within(fila).getByText('182 %')).toBeVisible();
-    expect(within(fila).getByText('Sobrecupo')).toBeVisible();
+    expect(screen.getByText('Ana López · Operador de estación en San Sebastián')).toBeVisible();
+    expect(mosaicos()).not.toContain('Usuarios');
   });
 });
 

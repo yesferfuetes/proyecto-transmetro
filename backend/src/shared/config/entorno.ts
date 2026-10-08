@@ -4,6 +4,7 @@ export const esquemaEntorno = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(3001),
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
+  JWT_SECRETO: z.string().min(32, 'debe tener al menos 32 caracteres'),
 });
 
 export type Entorno = z.infer<typeof esquemaEntorno>;

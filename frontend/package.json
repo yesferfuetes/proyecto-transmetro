@@ -12,7 +12,7 @@
     "build": "next build && node scripts/preparar-standalone.mjs",
     "start": "node --env-file-if-exists=.env .next/standalone/server.js",
     "typecheck": "next typegen && tsc --noEmit",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "next typegen && eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
@@ -21,11 +21,13 @@
     "tamano-paquete": "node scripts/tamano-paquete.mjs"
   },
   "dependencies": {
+    "@hookform/resolvers": "~5.9.1",
     "clsx": "~2.1.1",
     "lucide-react": "~1.52.0",
     "next": "~16.4.0",
     "react": "~19.3.0",
     "react-dom": "~19.3.0",
+    "react-hook-form": "~7.89.0",
     "server-only": "~0.0.1",
     "tailwind-merge": "~3.7.0",
     "zod": "~4.6.5",
