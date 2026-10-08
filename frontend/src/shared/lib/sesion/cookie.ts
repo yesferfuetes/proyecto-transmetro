@@ -1,7 +1,8 @@
 import 'server-only';
 import { cookies } from 'next/headers';
+import { NOMBRE_COOKIE_SESION } from './nombre-cookie';
 
-export const NOMBRE_COOKIE_SESION = 'transmetro_sesion';
+export { NOMBRE_COOKIE_SESION };
 
 /** Duración de la sesión que emite el backend. */
 export const DURACION_SESION_SEGUNDOS = 8 * 60 * 60;

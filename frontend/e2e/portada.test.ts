@@ -1,17 +1,21 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-test.describe('portada', () => {
-  test('responde y declara el idioma español', async ({ page }) => {
-    const respuesta = await page.goto('/');
+test.describe('entrada a la aplicación', () => {
+  test('sin sesión, la raíz lleva a iniciar sesión en español', async ({ page }) => {
+    await page.goto('/');
 
-    expect(respuesta?.status()).toBe(200);
+    await expect(page).toHaveURL(/\/login$/);
     await expect(page.locator('html')).toHaveAttribute('lang', 'es');
-    await expect(page.getByRole('heading', { level: 1, name: 'Transmetro' })).toBeVisible();
+  });
+
+  test('sin sesión, una vista del panel también lleva a iniciar sesión', async ({ page }) => {
+    await page.goto('/lineas');
+    await expect(page).toHaveURL(/\/login$/);
   });
 
   test('ofrece saltar al contenido desde el teclado', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/login');
     await page.keyboard.press('Tab');
 
     const enlace = page.getByRole('link', { name: 'Saltar al contenido' });
@@ -20,7 +24,7 @@ test.describe('portada', () => {
   });
 
   test('no tiene violaciones de accesibilidad graves ni críticas', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/login');
 
     const { violations } = await new AxeBuilder({ page }).analyze();
     const graves = violations.filter(

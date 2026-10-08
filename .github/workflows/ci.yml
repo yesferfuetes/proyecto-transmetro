@@ -130,14 +130,17 @@ jobs:
           cache-dependency-path: |
             backend/package-lock.json
             frontend/package-lock.json
-      - name: Secreto de sesión de prueba
-        run: echo "JWT_SECRETO=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+      - name: Secreto de sesión y contraseña de los usuarios de prueba
+        run: |
+          echo "JWT_SECRETO=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "E2E_CONTRASENA=Prueba$(openssl rand -hex 8)9" >> "$GITHUB_ENV"
       - name: Levantar el backend
         working-directory: backend
         run: |
           npm ci
           npm run build
           npm run migration:run
+          SEED_CONTRASENA="$E2E_CONTRASENA" npm run seed
           NODE_ENV=production nohup npm run start > ../backend.log 2>&1 &
           for _ in $(seq 1 30); do
             curl -sf http://localhost:3001/health && exit 0

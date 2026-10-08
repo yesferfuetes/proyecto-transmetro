@@ -1,5 +1,9 @@
+import { verificarContrasena } from '../../src/shared/seguridad/cifrador-de-contrasenas';
 import { sembrar } from '../../src/seeds/sembrar';
 import { BaseTemporal, contar, crearBaseTemporal } from './base-temporal';
+
+const CONTRASENA = 'Demo2026x';
+const OPCIONES = { contrasenaDeUsuarios: CONTRASENA };
 
 describe('datos semilla', () => {
   let base: BaseTemporal;
@@ -7,7 +11,7 @@ describe('datos semilla', () => {
   beforeAll(async () => {
     base = await crearBaseTemporal();
     await base.fuente.runMigrations();
-    await sembrar(base.fuente);
+    await sembrar(base.fuente, OPCIONES);
   });
 
   afterAll(async () => {
@@ -15,7 +19,7 @@ describe('datos semilla', () => {
   });
 
   it('una segunda siembra no inserta ni actualiza nada', async () => {
-    const resumen = await sembrar(base.fuente);
+    const resumen = await sembrar(base.fuente, OPCIONES);
     for (const conteo of Object.values(resumen)) {
       expect(conteo.insertados).toBe(0);
       expect(conteo.actualizados).toBe(0);
@@ -83,5 +87,92 @@ describe('datos semilla', () => {
        WHERE (SELECT count(*) FROM transmetro.bus b WHERE b.parqueo_id = p.id) > p.capacidad_vehiculos`,
     );
     expect(excedidos).toBe(0);
+  });
+
+  it('siembra un administrador, un supervisor y un operador por primera estación elegida', async () => {
+    const filas = await base.fuente.query<{ email: string; rol: string; codigo: string | null }[]>(
+      `SELECT u.email, u.rol, e.codigo FROM transmetro.usuario u
+       LEFT JOIN transmetro.estacion e ON e.id = u.estacion_id ORDER BY u.email`,
+    );
+    expect(filas).toEqual([
+      { email: 'admin@transmetro.test', rol: 'ADMINISTRADOR', codigo: null },
+      { email: 'operador.e001@transmetro.test', rol: 'OPERADOR_ESTACION', codigo: 'E001' },
+      expect.objectContaining({ rol: 'OPERADOR_ESTACION' }),
+      { email: 'supervisor@transmetro.test', rol: 'SUPERVISOR_MUNICIPAL', codigo: null },
+    ]);
+  });
+
+  it('cumple las reglas de usuarios: rol válido, estación solo para operadores, correo único', async () => {
+    const incumplen = await contar(
+      base.fuente,
+      `SELECT count(*) AS total FROM transmetro.usuario u
+       WHERE u.rol NOT IN ('OPERADOR_ESTACION', 'SUPERVISOR_MUNICIPAL', 'ADMINISTRADOR')
+          OR (u.rol = 'OPERADOR_ESTACION' AND u.estacion_id IS NULL)
+          OR (u.rol <> 'OPERADOR_ESTACION' AND u.estacion_id IS NOT NULL)
+          OR u.email <> lower(trim(u.email))
+          OR NOT u.activo`,
+    );
+    const administradores = await contar(
+      base.fuente,
+      "SELECT count(*) AS total FROM transmetro.usuario WHERE rol = 'ADMINISTRADOR' AND activo",
+    );
+    expect(incumplen).toBe(0);
+    expect(administradores).toBeGreaterThanOrEqual(1);
+  });
+
+  it('cada usuario sembrado entra con la contraseña de la siembra, guardada cifrada', async () => {
+    const filas = await base.fuente.query<{ password_hash: string }[]>(
+      'SELECT password_hash FROM transmetro.usuario',
+    );
+    for (const fila of filas) {
+      expect(fila.password_hash).not.toContain(CONTRASENA);
+      await expect(verificarContrasena(CONTRASENA, fila.password_hash)).resolves.toBe(true);
+    }
+  });
+
+  it('una segunda siembra con otra contraseña no cambia las de los usuarios existentes', async () => {
+    await sembrar(base.fuente, { contrasenaDeUsuarios: 'Distinta2026' });
+    const [fila] = await base.fuente.query<{ password_hash: string }[]>(
+      "SELECT password_hash FROM transmetro.usuario WHERE email = 'admin@transmetro.test'",
+    );
+    await expect(verificarContrasena(CONTRASENA, fila?.password_hash ?? '')).resolves.toBe(true);
+  });
+
+  it('deja recorridos coherentes: posiciones 1..n sin huecos y sin estaciones repetidas', async () => {
+    const huecos = await contar(
+      base.fuente,
+      `SELECT count(*) AS total FROM (
+         SELECT linea_id, count(*) AS n, max(orden_secuencia) AS maximo, min(orden_secuencia) AS minimo,
+                count(DISTINCT estacion_id) AS distintas
+         FROM transmetro.linea_estacion GROUP BY linea_id
+       ) r WHERE r.minimo <> 1 OR r.maximo <> r.n OR r.distintas <> r.n`,
+    );
+    expect(huecos).toBe(0);
+  });
+
+  it('pone toda estación en alguna línea y toda línea activa con al menos dos estaciones', async () => {
+    const sinLinea = await contar(
+      base.fuente,
+      `SELECT count(*) AS total FROM transmetro.estacion e
+       WHERE NOT EXISTS (SELECT 1 FROM transmetro.linea_estacion le WHERE le.estacion_id = e.id)`,
+    );
+    const activasCortas = await contar(
+      base.fuente,
+      `SELECT count(*) AS total FROM transmetro.linea l
+       WHERE l.estado = 'ACTIVA'
+         AND (SELECT count(*) FROM transmetro.linea_estacion le WHERE le.linea_id = l.id) < 2`,
+    );
+    expect(sinLinea).toBe(0);
+    expect(activasCortas).toBe(0);
+  });
+
+  it('usa códigos en mayúsculas para líneas y estaciones', async () => {
+    const minusculas = await contar(
+      base.fuente,
+      `SELECT count(*) AS total FROM (
+         SELECT codigo FROM transmetro.linea UNION ALL SELECT codigo FROM transmetro.estacion
+       ) c WHERE c.codigo <> upper(trim(c.codigo))`,
+    );
+    expect(minusculas).toBe(0);
   });
 });

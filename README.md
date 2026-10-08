@@ -44,7 +44,7 @@ cp .env.example .env
 npm ci
 npm run build
 npm run migration:run
-npm run seed
+SEED_CONTRASENA=<contraseña de los usuarios de la demo> npm run seed
 npm run start:dev          # http://localhost:3001 · Swagger en http://localhost:3001/docs
 
 # 3. Frontend, en otra terminal
@@ -99,10 +99,13 @@ Los valores reales viven en Railway (ADR 0005). Ningún secreto lleva prefijo p�
 | backend  | `DATABASE_URL`      | Conexión a PostgreSQL                                                     |
 | backend  | `PORT`              | Puerto HTTP (por defecto 3001)                                            |
 | backend  | `NODE_ENV`          | `development`, `test` o `production`; en producción no se publica Swagger |
+| backend  | `JWT_SECRETO`       | Firma de las sesiones; al menos 32 caracteres aleatorios                  |
+| backend  | `SEED_CONTRASENA`   | Solo al sembrar: contraseña inicial de los usuarios de la demo            |
 | frontend | `BACKEND_URL`       | URL interna del backend; solo la lee el servidor                          |
 | frontend | `PORT` / `HOSTNAME` | Puerto e interfaz del servidor standalone                                 |
 
-Si falta una variable obligatoria, el servicio no inicia y dice cuál falta.
+Si falta una variable obligatoria, el servicio no inicia y dice cuál falta. Las pruebas de extremo
+a extremo leen `E2E_CONTRASENA`, la misma contraseña con la que se sembraron los usuarios.
 
 ## Flujos críticos
 
@@ -111,11 +114,23 @@ Determinan la cobertura mínima de pruebas de extremo a extremo (DES-STD-002 §1
 - Inicio de sesión.
 - Toda mutación de datos.
 
+Cubiertos hoy en `frontend/e2e/`: iniciar y cerrar sesión con cada rol y ver su menú; registrar,
+editar, desactivar, reactivar y asignar contraseña a un usuario; cambiar la propia contraseña;
+registrar municipalidades, estaciones y líneas; armar, reordenar y activar un recorrido; consulta
+de la red por un operador, sin escritura.
+
 ## Estrategia de renderizado por ruta
 
-| Ruta | Estrategia | Motivo                           |
-| ---- | ---------- | -------------------------------- |
-| `/`  | Estática   | No depende de sesión ni de datos |
+| Ruta                                                  | Estrategia | Motivo                                         |
+| ----------------------------------------------------- | ---------- | ---------------------------------------------- |
+| `/`                                                   | Dinámica   | Lleva a `/inicio` o a `/login` según la sesión |
+| `/login`                                              | Dinámica   | Lee la cookie y el motivo de la redirección    |
+| `/inicio`, `/mi-cuenta`, `/acceso-denegado`           | Dinámica   | Dependen de la sesión                          |
+| `/usuarios/**`                                        | Dinámica   | Sesión de administrador; datos al momento      |
+| `/lineas/**`, `/estaciones/**`, `/municipalidades/**` | Dinámica   | Dependen de la sesión y del rol                |
+
+El intermediario (`src/proxy.ts`) solo redirige a `/login` cuando no hay cookie de sesión; los
+permisos se verifican en el servidor, en cada layout, página y acción.
 
 Las vistas con sesión son dinámicas y no se guardan en caché compartida. Cada ruta declara su
 estrategia en el propio segmento.
@@ -145,15 +160,16 @@ una vez con `npm run seed` dentro del contenedor del backend.
 
 ## Datos semilla
 
-| Dato                                                                  | Origen                                                                                             |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Líneas 1, 2, 6, 7, 12, 13, 18 y Ruta 5 con sus 99 estaciones en orden | Reales: mapa oficial de Transmetro, Municipalidad de Guatemala, actualización de noviembre de 2024 |
-| Distancias entre estaciones                                           | **Ficticias**: entre 0.4 y 1.2 km                                                                  |
-| Accesos, guardias y turnos                                            | **Ficticios**: accesos A y B por estación; un guardia por estación y turno                         |
-| Parqueos                                                              | **Ficticios**: 4 parqueos de 30 vehículos en Centra Sur, Atlántida, FEGUA y USAC Periférico        |
-| Buses                                                                 | **Ficticios**: estaciones de la línea + 1 por línea (113), placas `TM-0001` en adelante            |
-| Pilotos                                                               | **Ficticios**: uno por bus; nombres, DPI, teléfonos y correos inventados                           |
-| Municipalidades                                                       | Guatemala, y Mixco sin líneas para mostrar la expansión de la red                                  |
+| Dato                                                                  | Origen                                                                                                                                                                                               |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Líneas 1, 2, 6, 7, 12, 13, 18 y Ruta 5 con sus 99 estaciones en orden | Reales: mapa oficial de Transmetro, Municipalidad de Guatemala, actualización de noviembre de 2024                                                                                                   |
+| Distancias entre estaciones                                           | **Ficticias**: entre 0.4 y 1.2 km                                                                                                                                                                    |
+| Accesos, guardias y turnos                                            | **Ficticios**: accesos A y B por estación; un guardia por estación y turno                                                                                                                           |
+| Parqueos                                                              | **Ficticios**: 4 parqueos de 30 vehículos en Centra Sur, Atlántida, FEGUA y USAC Periférico                                                                                                          |
+| Buses                                                                 | **Ficticios**: estaciones de la línea + 1 por línea (113), placas `TM-0001` en adelante                                                                                                              |
+| Pilotos                                                               | **Ficticios**: uno por bus; nombres, DPI, teléfonos y correos inventados                                                                                                                             |
+| Municipalidades                                                       | Guatemala, y Mixco sin líneas para mostrar la expansión de la red                                                                                                                                    |
+| Usuarios                                                              | **Ficticios**: `admin@transmetro.test`, `supervisor@transmetro.test` y un operador por primera estación de las líneas 1, 2 y 12 (`operador.e001@…`). La contraseña inicial sale de `SEED_CONTRASENA` |
 
 Aproximaciones sobre los datos reales: el sentido del circuito de la Línea 2 y la posición de
 Capuchinas en la Línea 18 no se leen con certeza en el mapa. El servicio San Rafael–Paraíso no se

@@ -1,45 +1,38 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { destinosPermitidos, RejillaMosaicos } from '@/shared/components/navegacion';
-import { Seccion } from '@/shared/components/superficies';
-import { obtenerResumenDeEjemplo } from '../_ejemplo/inicio';
-import { obtenerSesionDeEjemplo } from '../_ejemplo/sesion';
+import { EncabezadoPagina, Seccion } from '@/shared/components/superficies';
+import { exigirSesion } from '@/shared/lib/sesion/sesion';
+import { ETIQUETA_DE_ROL, type Rol } from '@/shared/schemas/sesion';
 import { DESTINOS, ORDEN_DE_MOSAICOS } from '../destinos';
-import { AlertasRecientes } from './_componentes/alertas-recientes';
-import { FranjaInicio } from './_componentes/franja-inicio';
 
 export const metadata: Metadata = { title: 'Inicio' };
 
-function mosaicosDelRol(rol: string): ReturnType<typeof destinosPermitidos> {
+// Dinámica: depende de la sesión; sin caché compartida.
+export const dynamic = 'force-dynamic';
+
+function mosaicosDelRol(rol: Rol): ReturnType<typeof destinosPermitidos> {
   const permitidos = destinosPermitidos(DESTINOS, rol);
   return ORDEN_DE_MOSAICOS.flatMap((href) => permitidos.filter((destino) => destino.href === href));
 }
 
+/** Inicio común: los mosaicos son los mismos destinos que el menú permite al rol. */
 export default async function Inicio(): Promise<ReactElement> {
-  const sesion = await obtenerSesionDeEjemplo();
-  const resumen = await obtenerResumenDeEjemplo(sesion);
+  const sesion = await exigirSesion();
+  const rol = ETIQUETA_DE_ROL[sesion.rol];
   return (
     <>
-      <h1 className="sr-only">Inicio</h1>
-      <FranjaInicio resumen={resumen} />
+      <EncabezadoPagina
+        destacado="Inicio"
+        resto=""
+        descripcion={
+          sesion.estacion === null
+            ? `${sesion.nombre} · ${rol}`
+            : `${sesion.nombre} · ${rol} en ${sesion.estacion.nombre}`
+        }
+      />
       <Seccion id="accesos-rapidos" destacado="Accesos" resto="rápidos">
         <RejillaMosaicos mosaicos={mosaicosDelRol(sesion.rol)} />
-      </Seccion>
-      <Seccion
-        id="alertas-recientes"
-        destacado="Alertas"
-        resto="recientes"
-        acciones={
-          <Link
-            href="/alertas"
-            className="rounded-full px-3 py-2 text-label text-primary hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
-          >
-            Ver todas
-          </Link>
-        }
-      >
-        <AlertasRecientes alertas={resumen.recientes} />
       </Seccion>
     </>
   );
