@@ -40,6 +40,18 @@ export function DetalleEstacion({ estacion, esTuEstacion, acciones }: Propiedade
             },
             { clave: 'parqueo', etiqueta: 'Parqueo', valor: estacion.tieneParqueo ? 'Sí' : 'No' },
             { clave: 'coordenadas', etiqueta: 'Coordenadas', valor: coordenadas(estacion) },
+            {
+              clave: 'accesos',
+              etiqueta: 'Accesos',
+              valor: (
+                <Link
+                  href={`/accesos?estacionId=${estacion.id}`}
+                  className="text-label text-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+                >
+                  Ver accesos
+                </Link>
+              ),
+            },
           ]}
         />
       </Tarjeta>
