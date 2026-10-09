@@ -72,7 +72,7 @@ describe('datos de flota por línea', () => {
       id: 2,
       codigo: 'L1',
       nombre: 'Línea 1',
-      numeroDeEstaciones: 3,
+      estaciones: 3,
       buses: 4,
       maximo: 6,
     };

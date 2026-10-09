@@ -5,7 +5,7 @@ export const esquemaOpcionDeLinea = z.object({
   id: z.number().int().positive(),
   codigo: z.string(),
   nombre: z.string(),
-  numeroDeEstaciones: z.number().int().nonnegative(),
+  estaciones: z.number().int().nonnegative(),
   buses: z.number().int().nonnegative(),
   maximo: z.number().int().nonnegative(),
 });
