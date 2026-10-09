@@ -57,6 +57,13 @@ describe('ConsultasDeRedAdapter', () => {
     expect(execute).toHaveBeenCalledWith(new ObtenerLineasResumen([98, 99]));
   });
 
+  it('listarLineas pide todas las líneas sin filtrar por id', async () => {
+    const { adaptador, execute } = preparar([LINEA]);
+
+    await expect(adaptador.listarLineas()).resolves.toEqual([LINEA]);
+    expect(execute).toHaveBeenCalledWith(new ObtenerLineasResumen());
+  });
+
   it('estacionesDeLinea delega en el recorrido de la línea', async () => {
     const { adaptador, execute } = preparar([ESTACION]);
 
