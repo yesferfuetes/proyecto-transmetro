@@ -1,14 +1,27 @@
 import { expect, test } from '@playwright/test';
-import { busesDeLaLinea, iniciarSesion, lineaConCupo, registrarBus, sufijoUnico } from './apoyo';
+import {
+  busesDeLaLinea,
+  iniciarSesion,
+  lineaConCupo,
+  registrarBus,
+  registrarParqueoConCupo,
+  sufijoUnico,
+  valorDeParqueo,
+} from './apoyo';
 
 test('el supervisor registra un bus, lo asigna, lo cambia de parqueo y lo da de baja', async ({
   page,
 }) => {
-  const placa = `E2E-${sufijoUnico()}`;
+  const sufijo = sufijoUnico();
+  const placa = `E2E-${sufijo}`;
   await iniciarSesion(page, 'supervisor');
 
+  // Dos parqueos propios con cupo: el bus se registra en uno y después pasa al otro.
+  const primero = await registrarParqueoConCupo(page, `B${sufijo}`);
+  const segundo = await registrarParqueoConCupo(page, `C${sufijo}`);
+
   // Registrar sin línea, en un parqueo con cupo.
-  const detalle = await registrarBus(page, placa);
+  const detalle = await registrarBus(page, placa, primero);
   await expect(page.getByRole('heading', { name: placa })).toBeVisible();
   await expect(page.getByText('Este bus no sirve a ninguna línea.')).toBeVisible();
 
@@ -23,13 +36,7 @@ test('el supervisor registra un bus, lo asigna, lo cambia de parqueo y lo da de 
   // Cambiarlo a otro parqueo con cupo.
   await page.goto(detalle);
   const parqueo = page.getByRole('combobox', { name: 'Parqueo del bus' });
-  const actual = await parqueo.inputValue();
-  const otro = await parqueo
-    .locator(`option:not([value="${actual}"])`)
-    .first()
-    .getAttribute('value');
-  expect(otro).not.toBeNull();
-  await parqueo.selectOption(otro ?? '');
+  await parqueo.selectOption(await valorDeParqueo(parqueo, segundo));
   await page.getByRole('button', { name: 'Cambiar parqueo' }).click();
   await expect(page.getByText('Parqueo actualizado.')).toBeVisible();
 

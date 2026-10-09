@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { iniciarSesion, registrarEstacion, sufijoUnico } from './apoyo';
+import {
+  iniciarSesion,
+  registrarEstacion,
+  registrarParqueoConCupo,
+  sufijoUnico,
+  valorDeParqueo,
+} from './apoyo';
 
 async function agregarParada(page: Page, codigo: string): Promise<void> {
   const buscador = page.getByRole('combobox', { name: 'Agregar estación al final' });
@@ -34,12 +40,14 @@ test('una línea de dos estaciones admite cuatro buses y rechaza el quinto', asy
   const sufijo = sufijoUnico();
   await iniciarSesion(page, 'supervisor');
   const codigoLinea = await crearLineaDeDosEstaciones(page, sufijo);
+  const parqueo = await registrarParqueoConCupo(page, `L${sufijo}`);
 
   for (const numero of [1, 2, 3, 4, 5]) {
     await page.goto('/flota/nuevo');
     await page.getByLabel('Placa').fill(`F${sufijo}-${numero}`);
     await page.getByLabel('Capacidad máxima').fill('100');
-    await page.getByRole('combobox', { name: 'Parqueo' }).selectOption({ index: 1 });
+    const selectorDeParqueo = page.getByRole('combobox', { name: 'Parqueo' });
+    await selectorDeParqueo.selectOption(await valorDeParqueo(selectorDeParqueo, parqueo));
     const opcion = page
       .getByRole('combobox', { name: 'Línea' })
       .locator('option', { hasText: new RegExp(`^${codigoLinea} · `) });

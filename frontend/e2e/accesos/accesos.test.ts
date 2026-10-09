@@ -24,7 +24,7 @@ test('el supervisor registra guardias y un acceso, asigna, quita y no puede quit
   await page.getByLabel('Estación').selectOption({ index: 1 });
   await page.getByLabel('Código').fill(`T${sufijo}`);
   await elegirGuardia(page, primero);
-  await page.getByLabel('Turno').fill('06:00-14:00');
+  await page.getByRole('textbox', { name: 'Turno' }).fill('06:00-14:00');
   await page.getByRole('button', { name: 'Registrar acceso' }).click();
 
   await expect(page).toHaveURL(/\/accesos\/\d+$/);
@@ -34,7 +34,7 @@ test('el supervisor registra guardias y un acceso, asigna, quita y no puede quit
 
   await esperarHidratacion(page);
   await elegirGuardia(page, segundo);
-  await page.getByLabel('Turno').fill('14:00-22:00');
+  await page.getByRole('textbox', { name: 'Turno' }).fill('14:00-22:00');
   await page.getByRole('button', { name: 'Asignar guardia' }).click();
   await expect(asignaciones.getByRole('row').filter({ hasText: segundo })).toBeVisible();
 
@@ -44,7 +44,7 @@ test('el supervisor registra guardias y un acceso, asigna, quita y no puede quit
 
   await page.getByRole('button', { name: `Quitar a ${primero} del turno 06:00-14:00` }).click();
   await page.getByRole('button', { name: 'Quitar del turno' }).click();
-  await expect(page.getByRole('alert')).toContainText(/al menos un guardia/i);
+  await expect(page.getByRole('alert').filter({ hasText: /al menos un guardia/i })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(asignaciones.getByRole('row').filter({ hasText: primero })).toBeVisible();
 });

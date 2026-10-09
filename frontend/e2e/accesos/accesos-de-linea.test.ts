@@ -7,7 +7,7 @@ test('los accesos de la línea 1 muestran sus estaciones en orden de recorrido',
   await iniciarSesion(page, 'supervisor');
 
   await page.goto('/accesos');
-  await page.getByRole('link', { name: /Línea 1\b/ }).click();
+  await page.getByRole('link', { name: 'San Sebastián – Centro Cívico', exact: true }).click();
   await page.getByRole('link', { name: 'Ver accesos de la línea' }).click();
 
   await expect(page).toHaveURL(/\/accesos\/lineas\/\d+$/);
