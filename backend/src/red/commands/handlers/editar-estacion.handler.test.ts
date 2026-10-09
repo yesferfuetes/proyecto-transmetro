@@ -5,6 +5,7 @@ import {
 } from '../../../../test/utilidades/unidad-de-trabajo-simulada';
 import { Estacion } from '../../entities/estacion.entity';
 import { Municipalidad } from '../../entities/municipalidad.entity';
+import type { FlotaAdapter } from '../../infrastructure/adapters/flota.adapter';
 import { EstacionEditada } from '../../events/eventos-de-red';
 import { EditarEstacion } from '../impl/editar-estacion.command';
 import { EditarEstacionHandler } from './editar-estacion.handler';
@@ -23,19 +24,27 @@ interface Preparado {
   handler: EditarEstacionHandler;
   estaciones: RepositorioSimulado<Estacion>;
   publicar: jest.Mock;
+  tieneParqueos: jest.Mock;
 }
 
-function preparar(actual: Estacion | null = ACTUAL, municipalidadExiste = true): Preparado {
+function preparar(
+  actual: Estacion | null = ACTUAL,
+  municipalidadExiste = true,
+  conParqueos = false,
+): Preparado {
   const unidad = new UnidadDeTrabajoSimulada();
   const municipalidades = unidad.registrar(Municipalidad);
   const estaciones = unidad.registrar(Estacion);
   municipalidades.existsBy.mockResolvedValue(municipalidadExiste);
   estaciones.findOneBy.mockResolvedValue(actual);
   const publicar = jest.fn();
-  const handler = new EditarEstacionHandler(unidad, {
-    publish: publicar,
-  } as unknown as EventBus);
-  return { handler, estaciones, publicar };
+  const tieneParqueos = jest.fn().mockResolvedValue(conParqueos);
+  const handler = new EditarEstacionHandler(
+    unidad,
+    { publish: publicar } as unknown as EventBus,
+    { estacionTieneParqueos: tieneParqueos } as unknown as FlotaAdapter,
+  );
+  return { handler, estaciones, publicar, tieneParqueos };
 }
 
 describe('EditarEstacionHandler', () => {
@@ -94,5 +103,35 @@ describe('EditarEstacionHandler', () => {
     await expect(handler.execute(new EditarEstacion(99, { nombre: 'X' }, 9))).rejects.toMatchObject(
       { codigo: 'ESTACION_NO_EXISTE', tipo: 'NO_ENCONTRADO' },
     );
+  });
+
+  it('rechaza quitar la marca de parqueo si la estación tiene parqueos registrados', async () => {
+    const { handler, estaciones, tieneParqueos } = preparar(
+      { ...ACTUAL, tieneParqueo: true },
+      true,
+      true,
+    );
+
+    await expect(
+      handler.execute(new EditarEstacion(4, { tieneParqueo: false }, 9)),
+    ).rejects.toMatchObject({ codigo: 'ESTACION_CON_PARQUEOS', tipo: 'REGLA_NEGOCIO' });
+    expect(tieneParqueos).toHaveBeenCalledWith(4);
+    expect(estaciones.update.mock.calls).toHaveLength(0);
+  });
+
+  it('permite quitar la marca de parqueo si no hay parqueos registrados', async () => {
+    const { handler, estaciones } = preparar({ ...ACTUAL, tieneParqueo: true });
+
+    await handler.execute(new EditarEstacion(4, { tieneParqueo: false }, 9));
+
+    expect(estaciones.update.mock.calls).toContainEqual([{ id: 4 }, { tieneParqueo: false }]);
+  });
+
+  it('no consulta la flota si la marca de parqueo no se quita', async () => {
+    const { handler, tieneParqueos } = preparar({ ...ACTUAL, tieneParqueo: true }, true, true);
+
+    await handler.execute(new EditarEstacion(4, { nombre: 'Otra' }, 9));
+
+    expect(tieneParqueos).not.toHaveBeenCalled();
   });
 });

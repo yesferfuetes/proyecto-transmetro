@@ -155,3 +155,14 @@ export class CoordenadasInvalidas extends RedError {
     );
   }
 }
+
+export class EstacionConParqueos extends RedError {
+  constructor() {
+    super(
+      'ESTACION_CON_PARQUEOS',
+      'REGLA_NEGOCIO',
+      'La estación tiene parqueos registrados; no se le puede quitar la marca de parqueo.',
+      [{ campo: 'tieneParqueo', mensajes: ['Elimina primero los parqueos de la estación.'] }],
+    );
+  }
+}

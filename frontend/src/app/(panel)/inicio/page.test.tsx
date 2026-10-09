@@ -37,14 +37,21 @@ describe('Inicio', () => {
     vi.mocked(exigirSesion).mockResolvedValue(SUPERVISOR);
     render(await Inicio());
 
-    expect(mosaicos()).toEqual(['Líneas', 'Estaciones', 'Municipalidades']);
+    expect(mosaicos()).toEqual(['Líneas', 'Estaciones', 'Municipalidades', 'Accesos', 'Flota']);
   });
 
   it('el administrador ve además el acceso a Usuarios, al final', async () => {
     vi.mocked(exigirSesion).mockResolvedValue({ ...SUPERVISOR, rol: 'ADMINISTRADOR' });
     render(await Inicio());
 
-    expect(mosaicos()).toEqual(['Líneas', 'Estaciones', 'Municipalidades', 'Usuarios']);
+    expect(mosaicos()).toEqual([
+      'Líneas',
+      'Estaciones',
+      'Municipalidades',
+      'Accesos',
+      'Flota',
+      'Usuarios',
+    ]);
   });
 
   it('el operador ve su estación', async () => {

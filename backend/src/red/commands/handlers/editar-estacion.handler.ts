@@ -1,8 +1,9 @@
 import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { UnidadDeTrabajo } from '../../../shared/database/unidad-de-trabajo';
 import { Estacion } from '../../entities/estacion.entity';
-import { EstacionNoExiste } from '../../errors/errores-de-red';
+import { EstacionConParqueos, EstacionNoExiste } from '../../errors/errores-de-red';
 import { EstacionEditada } from '../../events/eventos-de-red';
+import { FlotaAdapter } from '../../infrastructure/adapters/flota.adapter';
 import { recortar } from '../../services/normalizacion';
 import { CambiosDeEstacion, EditarEstacion } from '../impl/editar-estacion.command';
 import { cambiosEfectivos, exigirMunicipalidadAsignada, validarCoordenadas } from './validaciones';
@@ -12,6 +13,7 @@ export class EditarEstacionHandler implements ICommandHandler<EditarEstacion> {
   constructor(
     private readonly unidadDeTrabajo: UnidadDeTrabajo,
     private readonly eventos: EventBus,
+    private readonly flota: FlotaAdapter,
   ) {}
 
   async execute(comando: EditarEstacion): Promise<void> {
@@ -26,6 +28,7 @@ export class EditarEstacionHandler implements ICommandHandler<EditarEstacion> {
         cambios.latitud === undefined ? actual.latitud : cambios.latitud,
         cambios.longitud === undefined ? actual.longitud : cambios.longitud,
       );
+      await this.exigirSinParqueos(comando.id, actual, cambios);
       if (cambios.municipalidadId !== undefined) {
         await exigirMunicipalidadAsignada(contexto, cambios.municipalidadId);
       }
@@ -38,6 +41,20 @@ export class EditarEstacionHandler implements ICommandHandler<EditarEstacion> {
     });
     if (campos.length > 0) {
       this.eventos.publish(new EstacionEditada(comando.actorId, comando.id, campos));
+    }
+  }
+
+  private async exigirSinParqueos(
+    id: number,
+    actual: Estacion,
+    cambios: CambiosDeEstacion,
+  ): Promise<void> {
+    if (
+      cambios.tieneParqueo === false &&
+      actual.tieneParqueo &&
+      (await this.flota.estacionTieneParqueos(id))
+    ) {
+      throw new EstacionConParqueos();
     }
   }
 }
