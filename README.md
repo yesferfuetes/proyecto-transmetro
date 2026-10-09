@@ -128,7 +128,7 @@ escritura.
 | --------------------------------------------- | --------------------------------------------------------------------------- | ---------- |
 | `/accesos`, `/accesos/[id]`                   | Accesos por estación, con sus guardias y turnos; `?estacionId=` filtra      | Supervisor |
 | `/accesos/lineas/[lineaId]`                   | Accesos de cada línea                                                       | —          |
-| `/guardias`, `/guardias/[id]`                 | Guardias de seguridad                                                       | Supervisor |
+| `/guardias`, `/guardias/[id]/editar`          | Guardias de seguridad                                                       | Supervisor |
 | `/flota`, `/flota/[id]`, `/flota/[id]/editar` | Buses, con filtros por línea, estado y parqueo                              | Supervisor |
 | `/flota/lineas`                               | Flota por línea: mínimo, máximo y si está completa, insuficiente o excedida | —          |
 | `/flota/parqueos`                             | Parqueos, su capacidad y los buses que tienen                               | Supervisor |
