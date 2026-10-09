@@ -1,4 +1,5 @@
 import { verificarContrasena } from '../../src/shared/seguridad/cifrador-de-contrasenas';
+import { normalizarTurno, turnosSeTraslapan } from '../../src/accesos/services/turnos';
 import { sembrar } from '../../src/seeds/sembrar';
 import { BaseTemporal, contar, crearBaseTemporal } from './base-temporal';
 
@@ -174,5 +175,42 @@ describe('datos semilla', () => {
        ) c WHERE c.codigo <> upper(trim(c.codigo))`,
     );
     expect(minusculas).toBe(0);
+  });
+
+  it('da a todo bus un parqueo y pone todo parqueo en una estación con la marca de parqueo', async () => {
+    const sinParqueo = await contar(
+      base.fuente,
+      'SELECT count(*) AS total FROM transmetro.bus WHERE parqueo_id IS NULL',
+    );
+    const enEstacionSinMarca = await contar(
+      base.fuente,
+      `SELECT count(*) AS total FROM transmetro.parqueo p
+       JOIN transmetro.estacion e ON e.id = p.estacion_id WHERE NOT e.tiene_parqueo`,
+    );
+    expect(sinParqueo).toBe(0);
+    expect(enEstacionSinMarca).toBe(0);
+  });
+
+  it('guarda todo turno normalizado y sin traslapes entre estaciones distintas', async () => {
+    const asignaciones = await base.fuente.query<
+      { guardia_id: number; acceso_id: number; estacion_id: number; turno: string }[]
+    >(
+      `SELECT ag.guardia_id, ag.acceso_id, a.estacion_id, ag.turno
+       FROM transmetro.acceso_guardia ag JOIN transmetro.acceso a ON a.id = ag.acceso_id`,
+    );
+    expect(asignaciones.length).toBeGreaterThan(0);
+    expect(asignaciones.filter((fila) => normalizarTurno(fila.turno) !== fila.turno)).toEqual([]);
+
+    const traslapes = asignaciones.flatMap((a, i) =>
+      asignaciones
+        .slice(i + 1)
+        .filter(
+          (b) =>
+            a.guardia_id === b.guardia_id &&
+            a.estacion_id !== b.estacion_id &&
+            turnosSeTraslapan(a.turno, b.turno),
+        ),
+    );
+    expect(traslapes).toEqual([]);
   });
 });
