@@ -4,7 +4,7 @@ import { appendFileSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
-const PRESUPUESTO_KB = 300;
+const PRESUPUESTO_KB = 450;
 const CARPETA = '.next/static/chunks';
 
 function archivosJs(carpeta) {

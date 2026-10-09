@@ -83,6 +83,29 @@ describe('consultas de resumen y opciones', () => {
     expect(createQueryBuilder).toHaveBeenCalledTimes(1);
   });
 
+  it('ObtenerLineasResumen sin ids devuelve todas ordenadas por código', async () => {
+    const llamadas: unknown[][] = [];
+    const constructor: object = new Proxy(
+      {},
+      {
+        get: (_objetivo, metodo: string) =>
+          metodo === 'getRawMany'
+            ? () => Promise.resolve([])
+            : (...argumentos: unknown[]) => {
+                llamadas.push([metodo, ...argumentos]);
+                return constructor;
+              },
+      },
+    );
+    const handler = new ObtenerLineasResumenHandler(
+      repositorio<Linea>({ createQueryBuilder: jest.fn(() => constructor) }),
+    );
+
+    await expect(handler.execute(new ObtenerLineasResumen())).resolves.toEqual([]);
+    expect(llamadas).toContainEqual(['orderBy', 'l.codigo', 'ASC']);
+    expect(llamadas.some(([metodo]) => metodo === 'where')).toBe(false);
+  });
+
   it('ListarEstacionesDeLinea devuelve las estaciones en el orden del recorrido', async () => {
     const E2: Estacion = { ...E1, id: 2, codigo: 'E2' };
     const find = jest.fn().mockResolvedValue([{ estacion: E2 }, { estacion: E1 }]);

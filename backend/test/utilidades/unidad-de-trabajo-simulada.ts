@@ -36,6 +36,8 @@ export function crearRepositorioSimulado<E extends ObjectLiteral>(): Repositorio
 export class UnidadDeTrabajoSimulada extends UnidadDeTrabajo {
   private readonly repositorios = new Map<EntityTarget<ObjectLiteral>, unknown>();
   ejecuciones = 0;
+  /** Candados pedidos, en el orden en que se pidieron. */
+  readonly candados: { espacio: string; id: number }[] = [];
 
   registrar<E extends ObjectLiteral>(
     entidad: EntityTarget<E>,
@@ -48,6 +50,10 @@ export class UnidadDeTrabajoSimulada extends UnidadDeTrabajo {
   async ejecutar<T>(trabajo: (contexto: ContextoTransaccional) => Promise<T>): Promise<T> {
     this.ejecuciones += 1;
     return await trabajo({
+      bloquear: (espacio: string, id: number): Promise<void> => {
+        this.candados.push({ espacio, id });
+        return Promise.resolve();
+      },
       repositorio: <E extends ObjectLiteral>(entidad: EntityTarget<E>): Repository<E> => {
         const repositorio = this.repositorios.get(entidad);
         if (!repositorio) {

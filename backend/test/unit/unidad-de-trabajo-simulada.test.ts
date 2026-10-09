@@ -27,4 +27,18 @@ describe('UnidadDeTrabajoSimulada', () => {
       unidad.ejecutar((contexto) => contexto.repositorio(EntidadDePrueba).count()),
     ).rejects.toThrow('no registrado');
   });
+
+  it('registra los candados en el orden en que se piden', async () => {
+    const unidad = new UnidadDeTrabajoSimulada();
+
+    await unidad.ejecutar(async (contexto) => {
+      await contexto.bloquear('flota-linea', 2);
+      await contexto.bloquear('flota-linea', 5);
+    });
+
+    expect(unidad.candados).toEqual([
+      { espacio: 'flota-linea', id: 2 },
+      { espacio: 'flota-linea', id: 5 },
+    ]);
+  });
 });

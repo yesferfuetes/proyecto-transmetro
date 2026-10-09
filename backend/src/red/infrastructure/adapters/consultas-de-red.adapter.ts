@@ -34,6 +34,10 @@ export class ConsultasDeRedAdapter extends ConsultasDeRed {
     return this.consultas.execute(new ObtenerLineasResumen(ids));
   }
 
+  listarLineas(): Promise<LineaResumen[]> {
+    return this.consultas.execute(new ObtenerLineasResumen());
+  }
+
   estacionesDeLinea(lineaId: number): Promise<EstacionResumen[]> {
     return this.consultas.execute(new ListarEstacionesDeLinea(lineaId));
   }

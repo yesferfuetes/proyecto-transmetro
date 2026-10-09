@@ -21,10 +21,10 @@ export class ObtenerLineasResumenHandler implements IQueryHandler<ObtenerLineasR
   constructor(@InjectRepository(Linea) private readonly lineas: Repository<Linea>) {}
 
   async execute({ ids }: ObtenerLineasResumen): Promise<LineaResumen[]> {
-    if (ids.length === 0) {
+    if (ids?.length === 0) {
       return [];
     }
-    const filas = await this.lineas
+    const consulta = this.lineas
       .createQueryBuilder('l')
       .select('l.id', 'id')
       .addSelect('l.codigo', 'codigo')
@@ -33,10 +33,12 @@ export class ObtenerLineasResumenHandler implements IQueryHandler<ObtenerLineasR
       .addSelect(
         (sub) => sub.select('COUNT(*)').from(LineaEstacion, 'c').where('c.linea_id = l.id'),
         'numeroDeEstaciones',
-      )
-      .where('l.id IN (:...ids)', { ids: [...ids] })
-      .orderBy('l.id', 'ASC')
-      .getRawMany<FilaDeLineaResumen>();
+      );
+    const filas = await (
+      ids
+        ? consulta.where('l.id IN (:...ids)', { ids: [...ids] }).orderBy('l.id', 'ASC')
+        : consulta.orderBy('l.codigo', 'ASC')
+    ).getRawMany<FilaDeLineaResumen>();
     return filas.map((fila) => ({
       id: fila.id,
       codigo: fila.codigo,
