@@ -18,6 +18,7 @@ import { LineaEstacion } from './entities/linea-estacion.entity';
 import { Linea } from './entities/linea.entity';
 import { Municipalidad } from './entities/municipalidad.entity';
 import { ConsultasDeRedAdapter } from './infrastructure/adapters/consultas-de-red.adapter';
+import { FlotaAdapter } from './infrastructure/adapters/flota.adapter';
 import { ListarEstacionesDeLineaHandler } from './queries/handlers/listar-estaciones-de-linea.handler';
 import { ListarEstacionesHandler } from './queries/handlers/listar-estaciones.handler';
 import { ListarLineasHandler } from './queries/handlers/listar-lineas.handler';
@@ -61,6 +62,7 @@ const MANEJADORES_DE_CONSULTAS = [
   providers: [
     ...MANEJADORES_DE_COMANDOS,
     ...MANEJADORES_DE_CONSULTAS,
+    FlotaAdapter,
     { provide: ConsultasDeRed, useClass: ConsultasDeRedAdapter },
   ],
   exports: [ConsultasDeRed],
