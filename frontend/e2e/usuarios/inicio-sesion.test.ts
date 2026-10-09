@@ -11,7 +11,7 @@ import {
 
 test.use({ viewport: ESCRITORIO });
 
-const COMUNES = ['Líneas', 'Estaciones', 'Municipalidades'];
+const COMUNES = ['Líneas', 'Estaciones', 'Municipalidades', 'Accesos', 'Flota'];
 
 function navegacion(page: Page): ReturnType<Page['getByRole']> {
   return page.getByRole('navigation', { name: 'Principal' });

@@ -12,6 +12,8 @@ export const DESTINOS: readonly Destino[] = [
   { href: '/lineas', etiqueta: 'Líneas', icono: 'lineas', roles: TODOS },
   { href: '/estaciones', etiqueta: 'Estaciones', icono: 'estaciones', roles: TODOS },
   { href: '/municipalidades', etiqueta: 'Municipalidades', icono: 'municipalidad', roles: TODOS },
+  { href: '/accesos', etiqueta: 'Accesos', icono: 'accesos', roles: TODOS },
+  { href: '/flota', etiqueta: 'Flota', icono: 'bus', roles: TODOS },
   { href: '/usuarios', etiqueta: 'Usuarios', icono: 'usuarios', roles: ['ADMINISTRADOR'] },
 ];
 
@@ -20,5 +22,7 @@ export const ORDEN_DE_MOSAICOS = [
   '/lineas',
   '/estaciones',
   '/municipalidades',
+  '/accesos',
+  '/flota',
   '/usuarios',
 ] as const;

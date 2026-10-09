@@ -28,6 +28,8 @@ export abstract class ConsultasDeRed {
   abstract listarEstaciones(): Promise<EstacionResumen[]>;
   abstract obtenerLinea(id: number): Promise<LineaResumen | null>;
   abstract obtenerLineas(ids: readonly number[]): Promise<LineaResumen[]>;
+  /** Todas las líneas, ordenadas por código. */
+  abstract listarLineas(): Promise<LineaResumen[]>;
   /** Estaciones de la línea en el orden de su recorrido. */
   abstract estacionesDeLinea(lineaId: number): Promise<EstacionResumen[]>;
 }

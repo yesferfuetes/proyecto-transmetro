@@ -37,7 +37,7 @@ describe('TituloDosTonos', () => {
 describe('Seccion', () => {
   it('toma su título como nombre accesible', () => {
     render(
-      <Seccion id="flota" destacado="Flota" resto="por línea" acciones={<a href="/flota">Ver</a>}>
+      <Seccion id="flota" destacado="Flota" resto="por línea" acciones={<a href="/ver">Ver</a>}>
         <p>Contenido</p>
       </Seccion>,
     );

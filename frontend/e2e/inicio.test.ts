@@ -82,7 +82,7 @@ test.describe('Inicio en escritorio', () => {
     const anchos = await mosaicos.evaluateAll((enlaces) =>
       enlaces.map((enlace) => enlace.getBoundingClientRect().width),
     );
-    expect(anchos).toHaveLength(3);
+    expect(anchos).toHaveLength(5);
     expect(new Set(anchos)).toEqual(new Set([104]));
   });
 
