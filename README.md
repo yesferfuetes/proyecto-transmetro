@@ -116,8 +116,31 @@ Determinan la cobertura mínima de pruebas de extremo a extremo (DES-STD-002 §1
 
 Cubiertos hoy en `frontend/e2e/`: iniciar y cerrar sesión con cada rol y ver su menú; registrar,
 editar, desactivar, reactivar y asignar contraseña a un usuario; cambiar la propia contraseña;
-registrar municipalidades, estaciones y líneas; armar, reordenar y activar un recorrido; consulta
-de la red por un operador, sin escritura.
+registrar municipalidades, estaciones y líneas; armar, reordenar y activar un recorrido; registrar
+y editar accesos, asignarles guardias por turno y quitarlos; registrar y editar guardias; registrar
+buses, asignarlos a una línea, moverlos entre líneas, cambiar su parqueo y su estado; registrar,
+editar y eliminar parqueos; consulta de la red, los accesos y la flota por un operador, sin
+escritura.
+
+## Accesos, guardias y flota
+
+| Ruta                                          | Qué hace                                                                    | Escritura  |
+| --------------------------------------------- | --------------------------------------------------------------------------- | ---------- |
+| `/accesos`, `/accesos/[id]`                   | Accesos por estación, con sus guardias y turnos; `?estacionId=` filtra      | Supervisor |
+| `/accesos/lineas/[lineaId]`                   | Accesos de cada línea                                                       | —          |
+| `/guardias`, `/guardias/[id]`                 | Guardias de seguridad                                                       | Supervisor |
+| `/flota`, `/flota/[id]`, `/flota/[id]/editar` | Buses, con filtros por línea, estado y parqueo                              | Supervisor |
+| `/flota/lineas`                               | Flota por línea: mínimo, máximo y si está completa, insuficiente o excedida | —          |
+| `/flota/parqueos`                             | Parqueos, su capacidad y los buses que tienen                               | Supervisor |
+
+Reglas que el backend aplica y el frontend solo muestra:
+
+- Una línea admite entre tantos buses como estaciones tiene y el doble; el máximo se exige al
+  asignar y el mínimo al quitar un bus de una línea activa.
+- Un bus tiene siempre un parqueo y un parqueo no excede su capacidad. Un bus de baja no tiene línea.
+- Un guardia no puede tener turnos que se traslapen en estaciones distintas; los turnos que cruzan
+  la medianoche se tratan como dos tramos.
+- A una estación con parqueos registrados no se le puede quitar la marca de parqueo.
 
 ## Estrategia de renderizado por ruta
 
@@ -128,6 +151,8 @@ de la red por un operador, sin escritura.
 | `/inicio`, `/mi-cuenta`, `/acceso-denegado`           | Dinámica   | Dependen de la sesión                          |
 | `/usuarios/**`                                        | Dinámica   | Sesión de administrador; datos al momento      |
 | `/lineas/**`, `/estaciones/**`, `/municipalidades/**` | Dinámica   | Dependen de la sesión y del rol                |
+| `/accesos/**`, `/guardias/**`                         | Dinámica   | Dependen de la sesión y del rol                |
+| `/flota/**` (buses, flota por línea y parqueos)       | Dinámica   | Dependen de la sesión y del rol                |
 
 El intermediario (`src/proxy.ts`) solo redirige a `/login` cuando no hay cookie de sesión; los
 permisos se verifican en el servidor, en cada layout, página y acción.
