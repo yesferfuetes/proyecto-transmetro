@@ -27,7 +27,7 @@ test('el operador registra una baja ocupación, una normal y una repetida', asyn
   await expect(
     page.getByText('Ya hay una alerta pendiente para este bus en tu estación.'),
   ).toBeVisible();
-  await expect(page.getByRole('alert').filter({ hasText: /\S/ })).toHaveCount(0);
+  await expect(page.locator('main').getByRole('alert')).toHaveCount(0);
 
   await atenderPendientesDe(page, bus.placa);
 });

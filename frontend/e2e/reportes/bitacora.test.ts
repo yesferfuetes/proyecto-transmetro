@@ -86,7 +86,7 @@ test('un rango con el inicio posterior al fin muestra el error del backend', asy
   await page.getByLabel('Fechas: desde').fill('2026-10-09');
   await page.getByLabel('Fechas: hasta').fill('2026-10-01');
   await page.getByRole('button', { name: 'Aplicar fechas' }).click();
-  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.locator('main').getByRole('alert')).toBeVisible();
   await expect(page.getByRole('table')).toHaveCount(0);
 });
 
