@@ -1,9 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
-import { ConsultasDeRed, EstacionResumen, LineaResumen } from '../../../shared/contratos/red';
+import {
+  ConsultasDeRed,
+  EstacionResumen,
+  LineaResumen,
+  RedCompleta,
+} from '../../../shared/contratos/red';
 import { ListarEstacionesDeLinea } from '../../queries/impl/listar-estaciones-de-linea.query';
 import { ObtenerEstacionesResumen } from '../../queries/impl/obtener-estaciones-resumen.query';
 import { ObtenerLineasResumen } from '../../queries/impl/obtener-lineas-resumen.query';
+import { ObtenerRedCompleta } from '../../queries/impl/obtener-red-completa.query';
 
 /** Lo que la red ofrece a los demás módulos. Nunca lanza por un id inexistente. */
 @Injectable()
@@ -40,5 +46,9 @@ export class ConsultasDeRedAdapter extends ConsultasDeRed {
 
   estacionesDeLinea(lineaId: number): Promise<EstacionResumen[]> {
     return this.consultas.execute(new ListarEstacionesDeLinea(lineaId));
+  }
+
+  obtenerRed(): Promise<RedCompleta> {
+    return this.consultas.execute(new ObtenerRedCompleta());
   }
 }

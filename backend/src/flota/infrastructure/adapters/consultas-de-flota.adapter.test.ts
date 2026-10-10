@@ -2,6 +2,8 @@ import type { QueryBus } from '@nestjs/cqrs';
 import type { BusResumen } from '../../../shared/contratos/flota';
 import { EstacionTieneParqueos } from '../../queries/impl/estacion-tiene-parqueos.query';
 import { ListarBusesDeLinea } from '../../queries/impl/listar-buses-de-linea.query';
+import { ListarBusesParaReporte } from '../../queries/impl/listar-buses-para-reporte.query';
+import { ListarFlotaPorLinea } from '../../queries/impl/listar-flota-por-linea.query';
 import { ObtenerBusesResumen } from '../../queries/impl/obtener-buses-resumen.query';
 import { ConsultasDeFlotaAdapter } from './consultas-de-flota.adapter';
 
@@ -48,5 +50,31 @@ describe('ConsultasDeFlotaAdapter', () => {
 
     await expect(adaptador.busesDeLinea(2)).resolves.toEqual([BUS]);
     expect(execute).toHaveBeenCalledWith(new ListarBusesDeLinea(2));
+  });
+
+  it('listarBuses pide todos los buses con su parqueo', async () => {
+    const conParqueo = { ...BUS, parqueo: { id: 4, codigo: 'P1', estacionId: 9 } };
+    const { adaptador, execute } = preparar([conParqueo]);
+
+    await expect(adaptador.listarBuses()).resolves.toEqual([conParqueo]);
+    expect(execute).toHaveBeenCalledWith(new ListarBusesParaReporte());
+  });
+
+  it('resumenDeFlotaPorLinea reutiliza la flota por línea y deja una fila por línea', async () => {
+    const { adaptador, execute } = preparar([
+      {
+        linea: { id: 2, codigo: 'L2', nombre: 'Norte', estado: 'ACTIVA' },
+        estaciones: 10,
+        minimo: 10,
+        maximo: 20,
+        buses: 7,
+        estadoDeFlota: 'insuficiente',
+      },
+    ]);
+
+    await expect(adaptador.resumenDeFlotaPorLinea()).resolves.toEqual([
+      { lineaId: 2, buses: 7, minimo: 10, maximo: 20, estadoDeFlota: 'insuficiente' },
+    ]);
+    expect(execute).toHaveBeenCalledWith(new ListarFlotaPorLinea());
   });
 });
