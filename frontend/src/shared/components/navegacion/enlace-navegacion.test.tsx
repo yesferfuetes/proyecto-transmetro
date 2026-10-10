@@ -26,4 +26,16 @@ describe('EnlaceNavegacion', () => {
     expect(enlace).not.toHaveAttribute('aria-current');
     expect(enlace).toHaveAttribute('href', '/flota');
   });
+
+  it('con pendientes los muestra y los anuncia; con cero no muestra nada', () => {
+    vi.mocked(usePathname).mockReturnValue('/inicio');
+    const { rerender } = render(
+      <EnlaceNavegacion destino={{ ...FLOTA, contador: 4 }} forma="lateral" />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Flota, 4 pendientes' })).toBeInTheDocument();
+
+    rerender(<EnlaceNavegacion destino={{ ...FLOTA, contador: 0 }} forma="lateral" />);
+    expect(screen.getByRole('link', { name: 'Flota' })).toBeInTheDocument();
+  });
 });

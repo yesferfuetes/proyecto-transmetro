@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import { leerPendientesDeAlertas } from '@/modules/alertas';
 import { BotonCerrarSesion } from '@/modules/usuarios';
 import { destinosPermitidos, NavegacionPrincipal } from '@/shared/components/navegacion';
 import { RegionAvisos } from '@/shared/components/superposiciones';
@@ -14,10 +15,14 @@ type Propiedades = Readonly<{ children: ReactNode }>;
 export default async function LayoutPanel({ children }: Propiedades): Promise<ReactElement> {
   const sesion = await exigirSesion();
   const rol = ETIQUETA_DE_ROL[sesion.rol];
+  const pendientes = await leerPendientesDeAlertas();
+  const destinos = destinosPermitidos(DESTINOS, sesion.rol).map((destino) =>
+    destino.href === '/alertas' ? { ...destino, contador: pendientes } : destino,
+  );
   return (
     <div className="lg:flex">
       <NavegacionPrincipal
-        destinos={destinosPermitidos(DESTINOS, sesion.rol)}
+        destinos={destinos}
         usuario={{
           nombre: sesion.nombre,
           rol: sesion.estacion === null ? rol : `${rol} · ${sesion.estacion.nombre}`,

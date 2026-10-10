@@ -37,7 +37,16 @@ describe('Inicio', () => {
     vi.mocked(exigirSesion).mockResolvedValue(SUPERVISOR);
     render(await Inicio());
 
-    expect(mosaicos()).toEqual(['Líneas', 'Estaciones', 'Municipalidades', 'Accesos', 'Flota']);
+    expect(mosaicos()).toEqual([
+      'Líneas',
+      'Estaciones',
+      'Municipalidades',
+      'Accesos',
+      'Flota',
+      'Pilotos',
+      'Alertas',
+      'Reportes',
+    ]);
   });
 
   it('el administrador ve además el acceso a Usuarios, al final', async () => {
@@ -50,8 +59,19 @@ describe('Inicio', () => {
       'Municipalidades',
       'Accesos',
       'Flota',
+      'Pilotos',
+      'Alertas',
+      'Reportes',
       'Usuarios',
     ]);
+  });
+
+  it('el operador ve Pilotos y Alertas, pero no Reportes', async () => {
+    vi.mocked(exigirSesion).mockResolvedValue({ ...SUPERVISOR, rol: 'OPERADOR_ESTACION' });
+    render(await Inicio());
+
+    expect(mosaicos()).toEqual(expect.arrayContaining(['Pilotos', 'Alertas']));
+    expect(mosaicos()).not.toContain('Reportes');
   });
 
   it('el operador ve su estación', async () => {

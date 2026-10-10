@@ -1,12 +1,14 @@
 import { render, screen, within } from '@testing-library/react';
 import { usePathname } from 'next/navigation';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { leerPendientesDeAlertas } from '@/modules/alertas';
 import { exigirSesion } from '@/shared/lib/sesion/sesion';
 import type { Sesion } from '@/shared/schemas/sesion';
 import LayoutPanel from './layout';
 
 vi.mock('next/navigation', () => ({ usePathname: vi.fn() }));
 vi.mock('@/shared/lib/sesion/sesion', () => ({ exigirSesion: vi.fn() }));
+vi.mock('@/modules/alertas', () => ({ leerPendientesDeAlertas: vi.fn() }));
 vi.mock('@/modules/usuarios', () => ({
   BotonCerrarSesion: (): React.ReactElement => <button type="submit">Cerrar sesión</button>,
 }));
@@ -30,6 +32,7 @@ function lateral(): HTMLElement {
 describe('LayoutPanel', () => {
   beforeEach(() => {
     vi.mocked(usePathname).mockReturnValue('/inicio');
+    vi.mocked(leerPendientesDeAlertas).mockResolvedValue(undefined);
   });
 
   it('exige sesión y muestra el usuario, su cuenta y el cierre de sesión', async () => {
@@ -69,5 +72,32 @@ describe('LayoutPanel', () => {
     vi.mocked(exigirSesion).mockResolvedValue({ ...SUPERVISOR, rol: 'ADMINISTRADOR' });
     render(await LayoutPanel({ children: null }));
     expect(within(lateral()).getByRole('link', { name: 'Usuarios' })).toBeInTheDocument();
+  });
+
+  it('Reportes lo ven el supervisor y el administrador, no el operador', async () => {
+    vi.mocked(exigirSesion).mockResolvedValue(SUPERVISOR);
+    const { unmount } = render(await LayoutPanel({ children: null }));
+    expect(within(lateral()).getByRole('link', { name: 'Reportes' })).toBeInTheDocument();
+    unmount();
+
+    vi.mocked(exigirSesion).mockResolvedValue({ ...SUPERVISOR, rol: 'OPERADOR_ESTACION' });
+    render(await LayoutPanel({ children: null }));
+    expect(within(lateral()).queryByRole('link', { name: 'Reportes' })).toBeNull();
+    expect(within(lateral()).getByRole('link', { name: 'Pilotos' })).toBeInTheDocument();
+    expect(within(lateral()).getByRole('link', { name: 'Alertas' })).toBeInTheDocument();
+  });
+
+  it('muestra las alertas pendientes junto a Alertas y nada si no se pudo leer', async () => {
+    vi.mocked(exigirSesion).mockResolvedValue(SUPERVISOR);
+    vi.mocked(leerPendientesDeAlertas).mockResolvedValue(3);
+    const { unmount } = render(await LayoutPanel({ children: null }));
+    expect(
+      within(lateral()).getByRole('link', { name: 'Alertas, 3 pendientes' }),
+    ).toBeInTheDocument();
+    unmount();
+
+    vi.mocked(leerPendientesDeAlertas).mockResolvedValue(undefined);
+    render(await LayoutPanel({ children: null }));
+    expect(within(lateral()).getByRole('link', { name: 'Alertas' })).toBeInTheDocument();
   });
 });
