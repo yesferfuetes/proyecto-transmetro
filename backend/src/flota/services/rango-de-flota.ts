@@ -1,4 +1,6 @@
-export type EstadoDeFlota = 'completa' | 'insuficiente' | 'excedida';
+import type { EstadoDeFlota } from '../../shared/contratos/flota';
+
+export type { EstadoDeFlota };
 
 export interface RangoDeFlota {
   minimo: number;

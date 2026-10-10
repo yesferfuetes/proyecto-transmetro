@@ -29,6 +29,7 @@ import { ObtenerEstacionesResumenHandler } from './queries/handlers/obtener-esta
 import { ObtenerLineaHandler } from './queries/handlers/obtener-linea.handler';
 import { ObtenerLineasResumenHandler } from './queries/handlers/obtener-lineas-resumen.handler';
 import { ObtenerMunicipalidadHandler } from './queries/handlers/obtener-municipalidad.handler';
+import { ObtenerRedCompletaHandler } from './queries/handlers/obtener-red-completa.handler';
 
 const MANEJADORES_DE_COMANDOS = [
   RegistrarMunicipalidadHandler,
@@ -52,6 +53,7 @@ const MANEJADORES_DE_CONSULTAS = [
   ObtenerEstacionesResumenHandler,
   ObtenerLineasResumenHandler,
   ListarEstacionesDeLineaHandler,
+  ObtenerRedCompletaHandler,
 ];
 
 /** Red de Transmetro. Es global para que los demás módulos consulten la red por su contrato. */

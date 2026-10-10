@@ -6,9 +6,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { UnidadDeTrabajoSimulada } from '../../test/utilidades/unidad-de-trabajo-simulada';
 import { ConsultasDeRed } from '../shared/contratos/red';
+import { ConsultasDeUsuarios } from '../shared/contratos/usuarios';
 import { UnidadDeTrabajo } from '../shared/database/unidad-de-trabajo';
 import { RegistrarAuditoria } from './commands/impl/registrar-auditoria.command';
 import { UsuarioDesactivado } from './events/eventos-de-usuarios';
+import { ConsultasDeUsuariosAdapter } from './infrastructure/adapters/consultas-de-usuarios.adapter';
 import { EmisorDeTokens } from './services/emisor-de-tokens.service';
 import { VerificadorDeSesionGuard } from './strategies/verificador-de-sesion.guard';
 import { UsuariosModule } from './usuarios.module';
@@ -69,5 +71,9 @@ describe('UsuariosModule', () => {
     await new Promise((resolver) => setImmediate(resolver));
 
     expect(ejecutar).toHaveBeenCalledWith(new RegistrarAuditoria(evento));
+  });
+
+  it('exporta el contrato de consultas de usuarios para los demás módulos', () => {
+    expect(modulo.get(ConsultasDeUsuarios)).toBeInstanceOf(ConsultasDeUsuariosAdapter);
   });
 });
