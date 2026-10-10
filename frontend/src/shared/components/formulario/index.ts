@@ -1,5 +1,6 @@
 export { AccionesFormulario } from './acciones-formulario';
 export { Campo, type AtributosControl } from './campo';
+export { CampoArea } from './campo-area';
 export { CampoNumero } from './campo-numero';
 export { CampoContrasena, CampoFecha, CampoTexto } from './campo-texto';
 export { Casilla } from './casilla';
