@@ -6,6 +6,8 @@ export type Destino = Readonly<{
   icono: NombreIcono;
   /** Roles que ven el destino. La matriz la decide el módulo de usuarios. */
   roles: readonly string[];
+  /** Cantidad pendiente que se muestra junto a la etiqueta; con cero o sin valor no se muestra. */
+  contador?: number;
 }>;
 
 /** Destinos que el rol puede ver, en el mismo orden. Menú y mosaicos salen de esta lista. */

@@ -19,11 +19,17 @@ type Propiedades = Readonly<{ destino: Destino; forma: Forma; alNavegar?: () => 
 /** Destino de la navegación principal; el activo se realza como píldora oscura. */
 export function EnlaceNavegacion({ destino, forma, alNavegar }: Propiedades): ReactElement {
   const activo = estaActivo(usePathname(), destino.href);
+  const pendientes = destino.contador !== undefined && destino.contador > 0 ? destino.contador : 0;
   return (
     <Link
       href={destino.href}
       onClick={alNavegar}
       aria-current={activo ? 'page' : undefined}
+      aria-label={
+        pendientes > 0
+          ? `${destino.etiqueta}, ${pendientes} ${pendientes === 1 ? 'pendiente' : 'pendientes'}`
+          : undefined
+      }
       className={cn(
         FORMAS[forma],
         'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:transition-colors',
@@ -36,6 +42,14 @@ export function EnlaceNavegacion({ destino, forma, alNavegar }: Propiedades): Re
         className={activo ? 'text-accent' : undefined}
       />
       {destino.etiqueta}
+      {pendientes > 0 ? (
+        <span
+          aria-hidden="true"
+          className="rounded-full bg-danger px-2 text-eyebrow text-ink-inverse tabular-nums"
+        >
+          {pendientes}
+        </span>
+      ) : null}
     </Link>
   );
 }

@@ -11,7 +11,16 @@ import {
 
 test.use({ viewport: ESCRITORIO });
 
-const COMUNES = ['Líneas', 'Estaciones', 'Municipalidades', 'Accesos', 'Flota'];
+const OPERATIVOS = [
+  'Líneas',
+  'Estaciones',
+  'Municipalidades',
+  'Accesos',
+  'Flota',
+  'Pilotos',
+  'Alertas',
+];
+const COMUNES = [...OPERATIVOS, 'Reportes'];
 
 function navegacion(page: Page): ReturnType<Page['getByRole']> {
   return page.getByRole('navigation', { name: 'Principal' });
@@ -24,7 +33,9 @@ async function mosaicos(page: Page): Promise<string[]> {
 
 async function comprobarDestinos(page: Page, esperados: string[]): Promise<void> {
   for (const destino of ['Inicio', ...esperados]) {
-    await expect(navegacion(page).getByRole('link', { name: destino, exact: true })).toBeVisible();
+    // Alertas puede llevar su contador de pendientes en el nombre accesible.
+    const nombre = new RegExp(`^${destino}(, \\d+ pendientes?)?$`);
+    await expect(navegacion(page).getByRole('link', { name: nombre })).toBeVisible();
   }
   expect(await mosaicos(page)).toEqual([...esperados].sort());
 }
@@ -64,8 +75,9 @@ test.describe('inicio de sesión', () => {
     await iniciarSesion(page, correo, contrasenaSembrada());
 
     await expect(navegacion(page)).toContainText('Operador de estación');
-    await comprobarDestinos(page, COMUNES);
+    await comprobarDestinos(page, OPERATIVOS);
     await expect(navegacion(page).getByRole('link', { name: 'Usuarios' })).toHaveCount(0);
+    await expect(navegacion(page).getByRole('link', { name: 'Reportes' })).toHaveCount(0);
 
     await page.goto('/usuarios');
     await expect(page).toHaveURL(/\/acceso-denegado$/);

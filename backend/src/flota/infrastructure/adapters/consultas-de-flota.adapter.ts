@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
-import { BusResumen, ConsultasDeFlota } from '../../../shared/contratos/flota';
+import {
+  BusConParqueo,
+  BusResumen,
+  ConsultasDeFlota,
+  FlotaDeLineaResumen,
+} from '../../../shared/contratos/flota';
 import { EstacionTieneParqueos } from '../../queries/impl/estacion-tiene-parqueos.query';
 import { ListarBusesDeLinea } from '../../queries/impl/listar-buses-de-linea.query';
+import { ListarBusesParaReporte } from '../../queries/impl/listar-buses-para-reporte.query';
+import { ListarFlotaPorLinea } from '../../queries/impl/listar-flota-por-linea.query';
 import { ObtenerBusesResumen } from '../../queries/impl/obtener-buses-resumen.query';
 
 /** Lo que la flota ofrece a los demás módulos. Nunca lanza por un id inexistente. */
@@ -27,5 +34,20 @@ export class ConsultasDeFlotaAdapter extends ConsultasDeFlota {
 
   busesDeLinea(lineaId: number): Promise<BusResumen[]> {
     return this.consultas.execute(new ListarBusesDeLinea(lineaId));
+  }
+
+  listarBuses(): Promise<BusConParqueo[]> {
+    return this.consultas.execute(new ListarBusesParaReporte());
+  }
+
+  async resumenDeFlotaPorLinea(): Promise<FlotaDeLineaResumen[]> {
+    const flota = await this.consultas.execute(new ListarFlotaPorLinea());
+    return flota.map(({ linea, buses, minimo, maximo, estadoDeFlota }) => ({
+      lineaId: linea.id,
+      buses,
+      minimo,
+      maximo,
+      estadoDeFlota,
+    }));
   }
 }

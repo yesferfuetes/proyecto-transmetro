@@ -120,7 +120,9 @@ registrar municipalidades, estaciones y líneas; armar, reordenar y activar un r
 y editar accesos, asignarles guardias por turno y quitarlos; registrar y editar guardias; registrar
 buses, asignarlos a una línea, moverlos entre líneas, cambiar su parqueo y su estado; registrar,
 editar y eliminar parqueos; consulta de la red, los accesos y la flota por un operador, sin
-escritura.
+escritura; registrar, editar y asignar bus a pilotos; registrar lecturas de demanda y ocupación,
+ver las alertas que generan y atenderlas; generar reportes de estaciones, líneas y buses, exportarlos
+a CSV y consultar la bitácora de consultas.
 
 ## Accesos, guardias y flota
 
@@ -142,6 +144,37 @@ Reglas que el backend aplica y el frontend solo muestra:
   la medianoche se tratan como dos tramos.
 - A una estación con parqueos registrados no se le puede quitar la marca de parqueo.
 
+## Pilotos, alertas y reportes
+
+| Ruta                                                          | Qué hace                                                                        | Quién                                          |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `/pilotos`, `/pilotos/[id]`                                   | Pilotos con su bus y su línea; filtros por línea, bus, "sin bus" y búsqueda     | Los tres roles (el operador, vista reducida)   |
+| `/pilotos/nuevo`, `/pilotos/[id]/editar`                      | Registrar y editar el expediente; asignar o cambiar el bus                      | Supervisor                                     |
+| `/alertas`                                                    | Alertas de capacidad con filtros por estado, tipo, estación y línea; atenderlas | Los tres roles (el operador, solo su estación) |
+| `/alertas/registrar`                                          | Registrar la demanda de una estación o la ocupación de un bus                   | Operador                                       |
+| `/reportes`                                                   | Elegir tipo de reporte y filtros (línea, estación, municipalidad)               | Supervisor y administrador                     |
+| `/reportes/estaciones`, `/reportes/lineas`, `/reportes/buses` | Reporte de una consulta ya registrada, paginado; exportación a CSV              | Supervisor y administrador                     |
+| `/reportes/bitacora`                                          | Constancias de los reportes generados, con filtros por usuario, tipo y fechas   | Supervisor y administrador                     |
+
+Reglas que el backend aplica y el frontend solo muestra:
+
+- **Pilotos:** el DPI es único y se normaliza antes de guardarse; el teléfono tiene 8 dígitos. El
+  operador recibe siempre la vista reducida (nombre, teléfono, bus y línea), decidida en el
+  servidor: el DPI, la dirección, el correo y el historial educativo no le llegan. Un piloto con un
+  bus de baja se avisa para reasignarlo. La auditoría no copia datos personales.
+- **Alertas:** se genera una alerta de sobrecupo cuando los pasajeros son al menos el 150 % de la
+  capacidad del bus, y una de baja ocupación cuando son menos del 25 %; la comparación usa enteros,
+  sin redondear. Un bus no puede tener dos alertas pendientes en la misma estación. El operador
+  solo registra y atiende lo de su estación; supervisor y administrador solo leen.
+- **Actualización de alertas:** una vista del navegador consulta cada 5 segundos una huella barata
+  (pendientes, atendidas y última alerta) a través de una acción de servidor y, solo cuando cambia,
+  pide al servidor que vuelva a pintar la tabla. El menú muestra el número de alertas pendientes.
+- **Reportes:** generar o exportar un reporte guarda primero una constancia; sin constancia no hay
+  reporte. Cambiar de página o recargar no crea constancias. Cada usuario solo lee los reportes de
+  sus propias constancias. El CSV usa coma, comillas dobles y codificación UTF-8 con BOM, y su
+  nombre lleva la fecha y hora de Guatemala. Las fechas de la bitácora son días de Guatemala,
+  inclusivos.
+
 ## Estrategia de renderizado por ruta
 
 | Ruta                                                  | Estrategia | Motivo                                         |
@@ -153,6 +186,7 @@ Reglas que el backend aplica y el frontend solo muestra:
 | `/lineas/**`, `/estaciones/**`, `/municipalidades/**` | Dinámica   | Dependen de la sesión y del rol                |
 | `/accesos/**`, `/guardias/**`                         | Dinámica   | Dependen de la sesión y del rol                |
 | `/flota/**` (buses, flota por línea y parqueos)       | Dinámica   | Dependen de la sesión y del rol                |
+| `/pilotos/**`, `/alertas/**`, `/reportes/**`          | Dinámica   | Dependen de la sesión y del rol                |
 
 El intermediario (`src/proxy.ts`) solo redirige a `/login` cuando no hay cookie de sesión; los
 permisos se verifican en el servidor, en cada layout, página y acción.

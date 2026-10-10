@@ -18,6 +18,25 @@ export interface LineaResumen {
   numeroDeEstaciones: number;
 }
 
+export interface MunicipalidadResumen {
+  id: number;
+  nombre: string;
+}
+
+export interface LineaDeRed extends LineaResumen {
+  municipalidadId: number;
+  /** Suma de las distancias del recorrido; null mientras no hay recorrido. */
+  longitudKm: number | null;
+  /** Ids de sus estaciones en el orden del recorrido. */
+  estacionIds: number[];
+}
+
+export interface RedCompleta {
+  municipalidades: MunicipalidadResumen[];
+  lineas: LineaDeRed[];
+  estaciones: EstacionResumen[];
+}
+
 /**
  * Lo que los demás módulos pueden consultar de la red. La implementa el módulo de la red y la
  * exporta como proveedor global; los demás la usan desde un adapter propio.
@@ -32,6 +51,8 @@ export abstract class ConsultasDeRed {
   abstract listarLineas(): Promise<LineaResumen[]>;
   /** Estaciones de la línea en el orden de su recorrido. */
   abstract estacionesDeLinea(lineaId: number): Promise<EstacionResumen[]>;
+  /** Municipalidades, líneas con su recorrido y estaciones, en una sola lectura. */
+  abstract obtenerRed(): Promise<RedCompleta>;
 }
 
 /** Cambió el número de estaciones del recorrido de una línea. */

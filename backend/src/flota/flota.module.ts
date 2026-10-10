@@ -20,6 +20,7 @@ import { ConsultasDeFlotaAdapter } from './infrastructure/adapters/consultas-de-
 import { RedAdapter } from './infrastructure/adapters/red.adapter';
 import { EstacionTieneParqueosHandler } from './queries/handlers/estacion-tiene-parqueos.handler';
 import { ListarBusesDeLineaHandler } from './queries/handlers/listar-buses-de-linea.handler';
+import { ListarBusesParaReporteHandler } from './queries/handlers/listar-buses-para-reporte.handler';
 import { ListarBusesHandler } from './queries/handlers/listar-buses.handler';
 import { ListarFlotaPorLineaHandler } from './queries/handlers/listar-flota-por-linea.handler';
 import { ListarOpcionesDeEstacionesHandler } from './queries/handlers/listar-opciones-de-estaciones.handler';
@@ -53,6 +54,7 @@ const MANEJADORES_DE_CONSULTAS = [
   EstacionTieneParqueosHandler,
   ObtenerBusesResumenHandler,
   ListarBusesDeLineaHandler,
+  ListarBusesParaReporteHandler,
 ];
 
 /** Flota de Transmetro. Es global para que los demás módulos la consulten por su contrato. */

@@ -2,6 +2,7 @@ import type { QueryBus } from '@nestjs/cqrs';
 import { ListarEstacionesDeLinea } from '../../queries/impl/listar-estaciones-de-linea.query';
 import { ObtenerEstacionesResumen } from '../../queries/impl/obtener-estaciones-resumen.query';
 import { ObtenerLineasResumen } from '../../queries/impl/obtener-lineas-resumen.query';
+import { ObtenerRedCompleta } from '../../queries/impl/obtener-red-completa.query';
 import { ConsultasDeRedAdapter } from './consultas-de-red.adapter';
 
 const ESTACION = { id: 1, codigo: 'E1', nombre: 'Uno', municipalidadId: 1, tieneParqueo: false };
@@ -69,5 +70,14 @@ describe('ConsultasDeRedAdapter', () => {
 
     await expect(adaptador.estacionesDeLinea(1)).resolves.toEqual([ESTACION]);
     expect(execute).toHaveBeenCalledWith(new ListarEstacionesDeLinea(1));
+  });
+
+  it('obtenerRed pide la red completa en una sola consulta', async () => {
+    const red = { municipalidades: [{ id: 1, nombre: 'Guatemala' }], lineas: [], estaciones: [] };
+    const { adaptador, execute } = preparar(red);
+
+    await expect(adaptador.obtenerRed()).resolves.toEqual(red);
+    expect(execute).toHaveBeenCalledWith(new ObtenerRedCompleta());
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 });
