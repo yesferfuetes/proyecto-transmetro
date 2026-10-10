@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { filasDeLaTabla, generarReporte, iniciarSesion, totalDeResultados } from './apoyo';
+import {
+  filasDeLaTabla,
+  generarReporte,
+  gruposDeBuses,
+  iniciarSesion,
+  totalDeResultados,
+} from './apoyo';
 
 test.beforeEach(async ({ page }) => {
   await iniciarSesion(page, 'supervisor');
@@ -33,10 +39,8 @@ test('el reporte de buses coloca cada bus una vez y los grupos suman la flota', 
   await generarReporte(page, 'Buses por línea');
   const total = await totalDeResultados(page);
   expect(total).toBeGreaterThanOrEqual(113);
-  const grupos = await page
-    .getByRole('region', { name: 'Buses por línea' })
-    .getByRole('listitem')
-    .allTextContents();
+  await expect(gruposDeBuses(page).first()).toBeVisible();
+  const grupos = await gruposDeBuses(page).allTextContents();
   const suma = grupos.reduce((acumulado, texto) => {
     const cantidad = /(\d+) buses?$/.exec(texto.trim());
     return acumulado + Number(cantidad?.[1] ?? 0);

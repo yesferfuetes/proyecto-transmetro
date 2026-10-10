@@ -35,6 +35,9 @@ describe('EnlaceNavegacion', () => {
 
     expect(screen.getByRole('link', { name: 'Flota, 4 pendientes' })).toBeInTheDocument();
 
+    rerender(<EnlaceNavegacion destino={{ ...FLOTA, contador: 1 }} forma="lateral" />);
+    expect(screen.getByRole('link', { name: 'Flota, 1 pendiente' })).toBeInTheDocument();
+
     rerender(<EnlaceNavegacion destino={{ ...FLOTA, contador: 0 }} forma="lateral" />);
     expect(screen.getByRole('link', { name: 'Flota' })).toBeInTheDocument();
   });

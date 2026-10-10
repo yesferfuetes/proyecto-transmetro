@@ -10,8 +10,7 @@ export type Filtros = Readonly<{
   /** Texto que identifica la opción, por ejemplo /· Línea 1$/. */
   linea?: RegExp;
   estacion?: RegExp;
-  /** Posición de la opción en la lista; 1 es la primera municipalidad. */
-  municipalidad?: number;
+  municipalidad?: RegExp;
 }>;
 
 async function elegir(selector: Locator, texto: RegExp): Promise<void> {
@@ -38,13 +37,16 @@ export async function generarReporte(
     await elegir(page.getByRole('combobox', { name: /^Estación/ }), filtros.estacion);
   }
   if (filtros.municipalidad !== undefined) {
-    await page
-      .getByRole('combobox', { name: /^Municipalidad/ })
-      .selectOption({ index: filtros.municipalidad });
+    await elegir(page.getByRole('combobox', { name: /^Municipalidad/ }), filtros.municipalidad);
   }
   await page.getByRole('button', { name: 'Generar reporte' }).click();
   await expect(page).toHaveURL(/\/reportes\/(estaciones|lineas|buses)\?consulta=\d+/);
   await expect(page.getByText(/^[\d.,\s]+ resultados?$/)).toBeVisible();
+}
+
+/** Grupos de buses por línea que resume un reporte de buses: "Línea · N buses". */
+export function gruposDeBuses(page: Page): Locator {
+  return page.getByRole('listitem').filter({ hasText: /· \d+ buses?$/ });
 }
 
 /** Cifra "N resultados" que acompaña a un reporte o a la bitácora. */
@@ -63,6 +65,7 @@ export function filasDeLaTabla(page: Page): Locator {
 
 /** Texto de una columna (por posición) en todas las filas de datos de la página. */
 export async function columna(page: Page, posicion: number): Promise<string[]> {
+  await expect(filasDeLaTabla(page).first()).toBeVisible();
   return filasDeLaTabla(page).evaluateAll(
     (filas, indice) =>
       filas.map((fila) => fila.querySelectorAll('td')[indice]?.textContent?.trim() ?? ''),

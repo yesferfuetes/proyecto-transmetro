@@ -51,7 +51,7 @@ export async function registrar(
 /** Atiende todas las alertas pendientes del bus, para que la prueba pueda repetirse. */
 export async function atenderPendientesDe(page: Page, placa: string): Promise<void> {
   await page.goto('/alertas?estado=pendiente');
-  await page.getByRole('table').or(page.getByText('Aún no hay alertas')).first().waitFor();
+  await page.getByRole('table').or(page.getByText('Sin resultados')).first().waitFor();
   await esperarHidratacion(page);
   const boton = page.getByRole('button', { name: `Atender alerta del bus ${placa}` });
   while ((await boton.count()) > 0) {

@@ -12,7 +12,7 @@ test('el operador registra una baja ocupación, una normal y una repetida', asyn
   await elegirBus(page, 'Ocupación', 2);
   await registrar(page, 'Ocupación', 0);
   await expect(page).toHaveURL(/\/alertas\?resaltada=\d+/);
-  const fila = page.getByRole('row').filter({ hasText: bus.placa });
+  const fila = page.getByRole('row').filter({ hasText: bus.placa }).first();
   await expect(fila.getByText('Baja ocupación')).toBeVisible();
   await expect(fila.getByText(/5 minutos/)).toBeVisible();
 
@@ -27,7 +27,7 @@ test('el operador registra una baja ocupación, una normal y una repetida', asyn
   await expect(
     page.getByText('Ya hay una alerta pendiente para este bus en tu estación.'),
   ).toBeVisible();
-  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByRole('alert').filter({ hasText: /\S/ })).toHaveCount(0);
 
   await atenderPendientesDe(page, bus.placa);
 });

@@ -11,7 +11,15 @@ import {
 
 test.use({ viewport: ESCRITORIO });
 
-const OPERATIVOS = ['Líneas', 'Estaciones', 'Municipalidades', 'Accesos', 'Flota', 'Pilotos', 'Alertas'];
+const OPERATIVOS = [
+  'Líneas',
+  'Estaciones',
+  'Municipalidades',
+  'Accesos',
+  'Flota',
+  'Pilotos',
+  'Alertas',
+];
 const COMUNES = [...OPERATIVOS, 'Reportes'];
 
 function navegacion(page: Page): ReturnType<Page['getByRole']> {
@@ -25,7 +33,9 @@ async function mosaicos(page: Page): Promise<string[]> {
 
 async function comprobarDestinos(page: Page, esperados: string[]): Promise<void> {
   for (const destino of ['Inicio', ...esperados]) {
-    await expect(navegacion(page).getByRole('link', { name: destino, exact: true })).toBeVisible();
+    // Alertas puede llevar su contador de pendientes en el nombre accesible.
+    const nombre = new RegExp(`^${destino}(, \\d+ pendientes?)?$`);
+    await expect(navegacion(page).getByRole('link', { name: nombre })).toBeVisible();
   }
   expect(await mosaicos(page)).toEqual([...esperados].sort());
 }

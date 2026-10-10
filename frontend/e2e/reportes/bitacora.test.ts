@@ -43,7 +43,7 @@ test('generar y exportar un reporte deja dos constancias nuevas en la bitácora'
 test('la bitácora se filtra por tipo y por el rango de hoy, y consultarla no agrega nada', async ({
   page,
 }) => {
-  await generarReporte(page, 'Líneas', { municipalidad: 1 });
+  await generarReporte(page, 'Líneas', { municipalidad: /^Guatemala$/ });
   await page.goto('/reportes/bitacora');
 
   await page.getByLabel('Reporte', { exact: true }).selectOption('LINEAS');
@@ -57,7 +57,7 @@ test('la bitácora se filtra por tipo y por el rango de hoy, y consultarla no ag
   await page.getByLabel('Fechas: hasta').fill(hoy);
   await page.getByRole('button', { name: 'Aplicar fechas' }).click();
   await expect(page).toHaveURL(new RegExp(`desde=${hoy}`));
-  expect(await filasDeLaTabla(page).count()).toBeGreaterThan(0);
+  await expect(filasDeLaTabla(page).first()).toBeVisible();
 
   const alFiltrar = await totalDeResultados(page);
   await page.reload();

@@ -25,7 +25,11 @@ export function EnlaceNavegacion({ destino, forma, alNavegar }: Propiedades): Re
       href={destino.href}
       onClick={alNavegar}
       aria-current={activo ? 'page' : undefined}
-      aria-label={pendientes > 0 ? `${destino.etiqueta}, ${pendientes} pendientes` : undefined}
+      aria-label={
+        pendientes > 0
+          ? `${destino.etiqueta}, ${pendientes} ${pendientes === 1 ? 'pendiente' : 'pendientes'}`
+          : undefined
+      }
       className={cn(
         FORMAS[forma],
         'focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none motion-safe:transition-colors',

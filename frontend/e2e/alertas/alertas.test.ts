@@ -29,11 +29,11 @@ test('el supervisor ve aparecer la alerta del operador sin recargar y luego la v
   const elegido = await elegirBus(operador, 'Demanda', 1);
   await registrar(operador, 'Demanda', elegido.capacidad * 2);
   await expect(operador).toHaveURL(/\/alertas\?resaltada=\d+/);
-  const filaDelOperador = operador.getByRole('row').filter({ hasText: elegido.placa });
+  const filaDelOperador = operador.getByRole('row').filter({ hasText: elegido.placa }).first();
   await expect(filaDelOperador.getByText('Sobrecupo')).toBeVisible();
 
   // La alerta aparece en la sesión del supervisor dentro del límite, sin recargar.
-  const filaDelSupervisor = supervisor.getByRole('row').filter({ hasText: elegido.placa });
+  const filaDelSupervisor = supervisor.getByRole('row').filter({ hasText: elegido.placa }).first();
   await expect(filaDelSupervisor.getByText('Pendiente')).toBeVisible({
     timeout: ESPERA_DE_SESION_AJENA_MS,
   });

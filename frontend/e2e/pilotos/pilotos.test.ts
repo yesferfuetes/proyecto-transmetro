@@ -33,7 +33,7 @@ test('el supervisor registra, edita y cambia de bus a un piloto', async ({ page 
   const primero = datosDePiloto(sufijo, 1, { placaDelBus: placaA });
   const ficha = await registrarPiloto(page, primero);
   await expect(page.getByRole('heading', { name: primero.nombre })).toBeVisible();
-  await expect(page.getByText(placaA)).toBeVisible();
+  await expect(page.getByText(placaA, { exact: true })).toBeVisible();
   await expect(page.getByText(nombreDeLinea)).toBeVisible();
   await page.goto(`/pilotos?busqueda=${encodeURIComponent(primero.nombre)}`);
   const fila = page.getByRole('row').filter({ hasText: primero.nombre });
@@ -67,5 +67,5 @@ test('el supervisor registra, edita y cambia de bus a un piloto', async ({ page 
   await page.getByRole('combobox', { name: 'Bus del piloto' }).selectOption('');
   await page.getByRole('button', { name: 'Cambiar bus' }).click();
   await expect(page.getByText('Este piloto no tiene bus asignado.')).toBeVisible();
-  await expect(page.getByText('Sin línea')).toBeVisible();
+  await expect(page.getByText('Sin línea', { exact: true })).toBeVisible();
 });
