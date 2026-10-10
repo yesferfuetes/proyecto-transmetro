@@ -17,7 +17,7 @@ test('los datos inválidos o repetidos muestran su error y no crean al piloto', 
   const casos = [
     {
       datos: datosDePiloto(sufijo, 2, { dpi: existente.dpi }),
-      error: page.getByRole('alert'),
+      error: page.locator('main').getByRole('alert'),
     },
     {
       datos: datosDePiloto(sufijo, 3, { dpi: existente.dpi.slice(0, 12) }),
