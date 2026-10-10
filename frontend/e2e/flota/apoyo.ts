@@ -14,15 +14,15 @@ export type LineaConCupo = Readonly<{ valor: string; etiqueta: string; buses: nu
 
 /** Del selector de líneas: la primera que admite un bus más sin quedar bajo su mínimo al quitarlo. */
 export async function lineaConCupo(page: Page): Promise<LineaConCupo> {
-  const opciones = await page
-    .getByRole('combobox', { name: 'Línea del bus' })
-    .locator('option')
-    .all();
+  const selector = page.getByRole('combobox', { name: 'Línea del bus' });
+  await expect(selector.locator('option').nth(1)).toBeAttached();
+  const opciones = await selector.locator('option').all();
   for (const opcion of opciones) {
     const etiqueta = (await opcion.textContent()) ?? '';
     const cifras = /\((\d+) de (\d+) buses\)/.exec(etiqueta);
     const valor = (await opcion.getAttribute('value')) ?? '';
-    if (cifras && valor !== '') {
+    // Solo las líneas sembradas: las que crean otras pruebas en paralelo cambian de cupo.
+    if (cifras && valor !== '' && /^(L\d+|R5) · /.test(etiqueta)) {
       const [buses, maximo] = [Number(cifras[1]), Number(cifras[2])];
       // El mínimo es la mitad del máximo; con uno más sobre él, la baja posterior es válida.
       if (buses >= maximo / 2 && buses < maximo) {
