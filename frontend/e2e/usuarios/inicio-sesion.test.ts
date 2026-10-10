@@ -11,7 +11,8 @@ import {
 
 test.use({ viewport: ESCRITORIO });
 
-const COMUNES = ['Líneas', 'Estaciones', 'Municipalidades', 'Accesos', 'Flota'];
+const OPERATIVOS = ['Líneas', 'Estaciones', 'Municipalidades', 'Accesos', 'Flota', 'Pilotos', 'Alertas'];
+const COMUNES = [...OPERATIVOS, 'Reportes'];
 
 function navegacion(page: Page): ReturnType<Page['getByRole']> {
   return page.getByRole('navigation', { name: 'Principal' });
@@ -64,8 +65,9 @@ test.describe('inicio de sesión', () => {
     await iniciarSesion(page, correo, contrasenaSembrada());
 
     await expect(navegacion(page)).toContainText('Operador de estación');
-    await comprobarDestinos(page, COMUNES);
+    await comprobarDestinos(page, OPERATIVOS);
     await expect(navegacion(page).getByRole('link', { name: 'Usuarios' })).toHaveCount(0);
+    await expect(navegacion(page).getByRole('link', { name: 'Reportes' })).toHaveCount(0);
 
     await page.goto('/usuarios');
     await expect(page).toHaveURL(/\/acceso-denegado$/);
