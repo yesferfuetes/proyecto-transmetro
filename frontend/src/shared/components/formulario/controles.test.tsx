@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { AccionesFormulario } from './acciones-formulario';
+import { CampoArea } from './campo-area';
 import { CampoNumero } from './campo-numero';
 import { CampoContrasena, CampoFecha } from './campo-texto';
 import { Casilla } from './casilla';
@@ -40,6 +41,17 @@ describe('controles de formulario', () => {
 
     expect(screen.getByLabelText('Fecha')).toHaveAttribute('type', 'date');
     expect(screen.getByLabelText('Contraseña')).toHaveAttribute('type', 'password');
+  });
+
+  it('el campo de área es un cuadro de varias líneas con el aspecto del sistema', () => {
+    render(<CampoArea aria-label="Historial" maxLength={2000} defaultValue="Línea 1" />);
+
+    const area = screen.getByRole('textbox', { name: 'Historial' });
+    expect(area.tagName).toBe('TEXTAREA');
+    expect(area).toHaveAttribute('rows', '4');
+    expect(area).toHaveAttribute('maxlength', '2000');
+    expect(area).toHaveClass('border-border-strong', 'min-h-control');
+    expect(area).not.toHaveClass('h-control');
   });
 
   it('la casilla lleva su etiqueta', () => {
