@@ -213,4 +213,34 @@ describe('datos semilla', () => {
     );
     expect(traslapes).toEqual([]);
   });
+
+  it('siembra 113 pilotos, todos con bus y con sus datos personales completos', async () => {
+    const total = await contar(base.fuente, 'SELECT count(*) AS total FROM transmetro.piloto');
+    const sinBus = await contar(
+      base.fuente,
+      'SELECT count(*) AS total FROM transmetro.piloto WHERE bus_id IS NULL',
+    );
+    const incompletos = await contar(
+      base.fuente,
+      `SELECT count(*) AS total FROM transmetro.piloto p
+       WHERE length(regexp_replace(p.dpi, '[^0-9]', '', 'g')) <> 13
+          OR length(regexp_replace(coalesce(p.telefono, ''), '[^0-9]', '', 'g')) <> 8
+          OR coalesce(trim(p.direccion_residencia), '') = ''
+          OR coalesce(trim(p.historial_educativo), '') = ''`,
+    );
+    const dpiRepetidos = await contar(
+      base.fuente,
+      'SELECT count(*) AS total FROM (SELECT dpi FROM transmetro.piloto GROUP BY dpi HAVING count(*) > 1) d',
+    );
+    expect(total).toBe(113);
+    expect(sinBus).toBe(0);
+    expect(incompletos).toBe(0);
+    expect(dpiRepetidos).toBe(0);
+  });
+
+  it('empieza sin alertas de capacidad', async () => {
+    expect(
+      await contar(base.fuente, 'SELECT count(*) AS total FROM transmetro.alerta_capacidad'),
+    ).toBe(0);
+  });
 });
